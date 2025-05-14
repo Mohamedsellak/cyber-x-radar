@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     }
     
     // Delete user
-    $result = $db->delete('users', 'id = ?', [$userId]);
+    $result = $db->delete('users',$userId);
     
     if ($result) {
         echo json_encode([

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FaBars, FaTimes, FaShieldAlt, FaRadiation, FaUserShield, FaLock, FaChartLine, FaTools } from 'react-icons/fa';
+import { FaBars, FaTimes, FaShieldAlt, FaRadiation, FaUserShield, FaLock, FaChartLine, FaTools, FaEnvelope, FaSignInAlt } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
@@ -106,7 +106,7 @@ const Navbar = () => {
             initial={{ opacity: 1 }} // Changed from opacity: 0 to be visible initially
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="hidden md:flex space-x-8"
+            className="hidden md:flex items-center space-x-6"
           >
             {[
               { href: "#services", label: "Services", icon: <FaShieldAlt className="text-blue-400 mr-1" size={12} /> },
@@ -114,6 +114,7 @@ const Navbar = () => {
               { href: "#partnership", label: "Partnership", icon: <FaLock className="text-blue-400 mr-1" size={12} /> },
               { href: "#about", label: "About", icon: <FaUserShield className="text-blue-400 mr-1" size={12} /> },
               { href: "#faq", label: "FAQ", icon: <FaChartLine className="text-blue-400 mr-1" size={12} /> },
+              { href: "/contact", label: "Contact", icon: <FaEnvelope className="text-blue-400 mr-1" size={12} /> },
             ].map((link) => (
               <Link 
                 key={link.href}
@@ -130,57 +131,101 @@ const Navbar = () => {
           </motion.div>
           
           {/* Mobile Menu Toggle */}
-          <motion.div 
-            initial={{ opacity: 1 }} // Changed from opacity: 0 to be visible initially
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="md:hidden flex items-center"
-          >
-            <button 
-              className="text-gray-300 hover:text-blue-400 focus:outline-none p-1"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          <div className="md:hidden flex items-center gap-3">
+            {/* Mobile Login Button - Enhanced */}
+            <motion.div 
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <AnimatePresence mode="wait">
-                {isMenuOpen ? (
-                  <motion.div
-                    key="close"
-                    initial={{ rotate: -45, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -45, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <FaTimes size={24} />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="open"
-                    initial={{ rotate: 45, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 45, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <FaBars size={24} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </button>
-          </motion.div>
+              <Link 
+                href="/login"
+                className="flex items-center justify-center gap-1.5 text-sm font-medium border border-indigo-500/80 bg-[#1A1A3A]/60 hover:bg-indigo-600/30 text-blue-400 hover:text-blue-200 py-1.5 px-3.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-blue-500/20"
+              >
+                <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600/10 to-indigo-600/20 opacity-0 hover:opacity-100 transition-opacity"></span>
+                <FaSignInAlt size={14} className="transform transition-transform hover:rotate-12" />
+              </Link>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <button 
+                className="text-gray-300 hover:text-blue-400 focus:outline-none p-1"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+              >
+                <AnimatePresence mode="wait">
+                  {isMenuOpen ? (
+                    <motion.div
+                      key="close"
+                      initial={{ rotate: -45, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -45, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <FaTimes size={24} />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="open"
+                      initial={{ rotate: 45, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 45, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <FaBars size={24} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            </motion.div>
+          </div>
           
+          {/* Action Buttons - Now contains both Login and Start Scanning */}
           <motion.div 
             initial={{ opacity: 1, scale: 1 }} // Changed from opacity: 0, scale: 0.9 to be visible initially
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="hidden md:block"
+            className="hidden md:flex items-center gap-3"
           >
+            {/* Start Scanning Button */}
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white px-6 py-2 rounded-full font-medium transition shadow-lg hover:shadow-blue-900/30 flex items-center gap-2"
+              className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white px-6 py-2.5 rounded-full font-medium transition shadow-lg hover:shadow-blue-900/30 flex items-center gap-2"
             >
-              <FaRadiation size={14} />
+              <FaRadiation size={14} className="animate-spin-slow" />
               <span>Start Scanning</span>
             </motion.button>
+            
+            {/* Enhanced Login Button with better hover effect */}
+            <Link 
+              href="/login"
+              className="relative group overflow-hidden flex items-center gap-2.5 text-sm font-medium border border-indigo-600/50 bg-indigo-900/20 hover:bg-indigo-800/30 text-blue-300 hover:text-blue-200 py-2.5 px-5 rounded-full transition-all duration-300 shadow-sm hover:shadow-blue-900/30 hover:border-indigo-500/80"
+            >
+              {/* Animated glow effect */}
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-600/10 via-indigo-600/5 to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
+              
+              {/* Shimmer effect on hover */}
+              <span className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-indigo-400/10 to-transparent -translate-x-full group-hover:translate-x-[200%] transition-all duration-1000 ease-in-out rounded-full"></span>
+              
+              {/* Icon with pulse effect */}
+              <span className="relative z-10 flex items-center justify-center w-5 h-5">
+                <span className="absolute inset-0 rounded-full bg-blue-500/20 group-hover:animate-pulse"></span>
+                <FaSignInAlt size={14} className="text-blue-400 group-hover:text-blue-300 transition-colors transform group-hover:scale-110 duration-300" />
+              </span>
+              
+              {/* Text with subtle hover effect */}
+              <span className="relative z-10 transition-all duration-300 group-hover:tracking-wider">
+                Login
+              </span>
+              
+              {/* Subtle dot indicator */}
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-400/70 group-hover:bg-blue-300 animate-pulse"></span>
+            </Link>
           </motion.div>
         </div>
         
@@ -200,7 +245,9 @@ const Navbar = () => {
                   { href: "#free-tools", label: "Free Tools", icon: <FaTools size={14} /> },
                   { href: "#partnership", label: "Partnership", icon: <FaLock size={14} /> },
                   { href: "#about", label: "About", icon: <FaUserShield size={14} /> },
-                  { href: "#faq", label: "FAQ", icon: <FaChartLine size={14} /> }
+                  { href: "#faq", label: "FAQ", icon: <FaChartLine size={14} /> },
+                  { href: "/contact", label: "Contact", icon: <FaEnvelope size={14} /> },
+                  { href: "/login", label: "Login", icon: <FaSignInAlt size={14} /> }
                 ].map((link) => (
                   <motion.div key={link.href} variants={itemVariants}>
                     <Link 
@@ -220,7 +267,7 @@ const Navbar = () => {
                   <motion.button 
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white w-full py-3 rounded-md font-medium transition shadow-lg hover:shadow-blue-900/30 mt-4 flex items-center justify-center gap-2"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white w-full py-3 rounded-full font-medium transition shadow-lg hover:shadow-blue-900/30 mt-4 flex items-center justify-center gap-2"
                   >
                     <FaRadiation size={14} />
                     <span>Start Scanning</span>
@@ -250,6 +297,22 @@ const Navbar = () => {
           />
         ))}
       </div>
+      
+      {/* Add custom animation for the radiation icon */}
+      <style jsx global>{`
+        @keyframes spin-slow {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        
+        .animate-spin-slow {
+          animation: spin-slow 4s linear infinite;
+        }
+      `}</style>
     </motion.nav>
   );
 };

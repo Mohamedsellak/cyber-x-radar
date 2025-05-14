@@ -35,9 +35,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $data['email'];
     $password = $data['password'];
     
-    // Fetch users from database
-    $query = "SELECT * FROM users WHERE email = '$email'";
-    $users = $db->select($query);
+    // Log the authentication attempt
+    error_log("Login attempt for email: $email");
+    
+    // Fetch user from database with prepared statement to prevent SQL injection
+    $users = $db->select("users", "email = ?", [$email]);
+    
+    // Debug response
+    error_log("DB query response: " . print_r($users, true));
     
     if (empty($users)) {
         http_response_code(401);
@@ -62,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     // Generate new token with proper expiration
+    
     $jwt = $auth->generateToken($userData);
     
     // Calculate expiration time for the response

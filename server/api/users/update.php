@@ -47,6 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     
     $userId = $data['id'];
     
+    // Debug query execution
+    error_log("Fetching user with ID: $userId");
+    
     // Check if user exists
     $user = $db->selectOne("users", $userId);
     
@@ -59,12 +62,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     // Prepare update data
     $updateData = [];
     
-    if (isset($data['name'])) {
-        $updateData['name'] = $data['name'];
+    // Check if email is being updated and if it's different from current email
+    if (isset($data['email']) && $data['email'] !== $user['email']) {
+        // Check if the new email already exists for another user
+        $existingEmail = $db->select("users", "email = ? AND id != ?", [$data['email'], $userId]);
+        
+        if (!empty($existingEmail)) {
+            http_response_code(409);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Email already exists for another user'
+            ]);
+            exit();
+        }
+        
+        $updateData['email'] = $data['email'];
     }
     
-    if (isset($data['email'])) {
-        $updateData['email'] = $data['email'];
+    // Add other fields to update
+    if (isset($data['name'])) {
+        $updateData['name'] = $data['name'];
     }
     
     if (isset($data['password']) && !empty($data['password'])) {
@@ -77,20 +94,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         exit();
     }
     
-    // Update timestamp
+    // Add updated timestamp
     $updateData['updated_at'] = date('Y-m-d H:i:s');
+    
+    // Debug update data
+    error_log("Update data: " . print_r($updateData, true));
     
     // Update user
     $result = $db->update('users', $updateData, 'id = ?', [$userId]);
     
-    if ($result) {
+    if ($result !== false) {
         echo json_encode([
             'status' => 'success',
             'message' => 'User updated successfully'
         ]);
     } else {
         http_response_code(500);
-        echo json_encode(['error' => 'Failed to update user']);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Failed to update user',
+            'debug_info' => 'Check server logs for details'
+        ]);
     }
 } else {
     http_response_code(405);

@@ -110,35 +110,63 @@ class DbMethods {
      */
     public function update($table, $data, $where, $params = []) {
         try {
+            // Debug the update operation
+            error_log("Updating table: $table with WHERE: $where");
+            error_log("Update data: " . print_r($data, true));
+            error_log("WHERE params: " . print_r($params, true));
+            
+            // Generate column=value pairs for SET clause
             $setClauses = [];
-            foreach (array_keys($data) as $column) {
-                $setClauses[] = "$column = :$column";
-            }
-
-            $setClause = implode(", ", $setClauses);
-            $query = "UPDATE $table SET $setClause WHERE $where";
+            $allParams = [];
             
-            $stmt = $this->conn->prepare($query);
-            
-            // Bind SET values
-            foreach ($data as $key => $value) {
-                $stmt->bindValue(":$key", $value);
+            // Create named parameters for SET values
+            foreach ($data as $column => $value) {
+                $paramName = "set_" . $column;
+                $setClauses[] = "$column = :$paramName";
+                $allParams[":$paramName"] = $value; // Fixed missing quote here
             }
             
-            // Bind WHERE values
-            foreach ($params as $key => $value) {
-                if (is_int($key)) {
-                    $paramIndex = $key + 1;
-                    $stmt->bindValue($paramIndex, $value);
-                } else {
-                    $stmt->bindValue(":$key", $value);
+            // Convert WHERE clause to use named parameters
+            $namedWhere = $where;
+            if (strpos($where, '?') !== false) {
+                // Count how many question marks
+                $count = substr_count($where, '?');
+                // Replace each ? with a named parameter
+                for ($i = 0; $i < $count; $i++) {
+                    $whereParamName = ":where_param$i";
+                    // Replace only the first occurrence
+                    $pos = strpos($namedWhere, '?');
+                    if ($pos !== false) {
+                        $namedWhere = substr_replace($namedWhere, $whereParamName, $pos, 1);
+                    }
+                    // Add to allParams
+                    $allParams[$whereParamName] = $params[$i];
                 }
             }
             
+            // Create SET clause string
+            $setClause = implode(", ", $setClauses);
+            
+            // Create the query with all named parameters
+            $query = "UPDATE $table SET $setClause WHERE $namedWhere";
+            error_log("Final query: $query");
+            error_log("All parameters: " . print_r($allParams, true));
+            
+            // Prepare the statement
+            $stmt = $this->conn->prepare($query);
+            
+            // Bind all parameters
+            foreach ($allParams as $param => $value) {
+                $stmt->bindValue($param, $value);
+            }
+            
+            // Execute the query
             $stmt->execute();
             return $stmt->rowCount();
         } catch (PDOException $e) {
             error_log("Update error: " . $e->getMessage());
+            error_log("SQL state: " . $e->getCode());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return false;
         }
     }
@@ -151,11 +179,11 @@ class DbMethods {
      * @param array $params Parameters for WHERE clause
      * @return int|false Number of affected rows or false on failure
      */
-    public function delete($table, $where, $params = []) {
+    public function delete($table, $id) {
         try {
-            $query = "DELETE FROM $table WHERE $where";
+            $query = "DELETE FROM $table WHERE id = ?";
             $stmt = $this->conn->prepare($query);
-            $stmt->execute($params);
+            $stmt->execute([$id]);
             return $stmt->rowCount();
         } catch (PDOException $e) {
             error_log("Delete error: " . $e->getMessage());
