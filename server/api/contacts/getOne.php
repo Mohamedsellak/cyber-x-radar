@@ -21,46 +21,42 @@ $db = new DbMethods();
 
 // GET method only
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Get a specific user by ID
+    // Get a specific contact by ID
     if (!isset($_GET['id'])) {
         http_response_code(400);
         echo json_encode([
             'status' => 'error',
-            'message' => 'User ID is required'
+            'message' => 'Contact ID is required'
         ]);
         exit();
     }
     
-    $userId = $_GET['id'];
+    $contactId = $_GET['id'];
     
-    // Validate user ID
-    if (!is_numeric($userId) || $userId <= 0) {
+    // Validate contact ID
+    if (!is_numeric($contactId) || $contactId <= 0) {
         http_response_code(400);
         echo json_encode([
             'status' => 'error',
-            'message' => 'Invalid user ID'
+            'message' => 'Invalid contact ID'
         ]);
         exit();
     }
     
-    // Query to get user by ID
-    $user = $db->selectOne("users", $userId);
+    // Get the contact
+    $contact = $db->selectOne("contacts", $contactId);
     
-    if (empty($user)) {
-        http_response_code(400);
+    if (empty($contact)) {
+        http_response_code(404);
         echo json_encode([
             'status' => 'error',
-            'message' => 'User not found',
-            'data' => null
+            'message' => 'Contact not found'
         ]);
     } else {
-        // Remove password for security
-        unset($user['password']);
-        
         echo json_encode([
             'status' => 'success',
-            'message' => 'User retrieved successfully',
-            'data' => $user
+            'message' => 'Contact retrieved successfully',
+            'data' => $contact
         ]);
     }
 } else {

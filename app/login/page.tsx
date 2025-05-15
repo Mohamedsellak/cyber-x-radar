@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { FaLock, FaUserShield, FaRadiation } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -11,10 +13,21 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isClient, setIsClient] = useState(false);
+  const router = useRouter();
+  const { login, isAuthenticated } = useAuth();
+
+  // If already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    // Save the remember me preference
+    localStorage.setItem('rememberMe', rememberMe.toString());
+  }, [rememberMe]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,16 +35,16 @@ export default function Login() {
     setError('');
 
     try {
-      // Authentication logic would go here
-      console.log('Logging in with:', { email, password, rememberMe });
+      // Use the login function from the auth context
+      const success = await login(email, password);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirect to dashboard on success
-      window.location.href = '/dashboard';
+      if (success) {
+        router.push('/dashboard');
+      } else {
+        setError('Invalid email or password. Please try again.');
+      }
     } catch (err) {
-      setError('Invalid email or password. Please try again.');
+      setError('An error occurred during login. Please try again.');
     } finally {
       setIsLoading(false);
     }

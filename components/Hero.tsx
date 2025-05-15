@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaShieldAlt, FaLock, FaBug, FaInfoCircle, FaChartLine, FaExclamationTriangle, FaAngleRight, FaGlobe, FaRegCheckCircle, FaRadiation, FaServer, FaUserShield, FaSync, FaFileDownload } from 'react-icons/fa';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import CollectUserInfoModal from './HeroModals/CollectUserInfoModal';
 
 // Define the API response type
 interface DomainStatisticsResponse {
@@ -29,6 +30,7 @@ const Hero = () => {
   const [domainStats, setDomainStats] = useState<DomainStatisticsResponse | null>(null);
   const [showTestResults, setShowTestResults] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showUserInfoModal, setShowUserInfoModal] = useState(false);
   
   // Update scan count periodically to simulate live data
   useEffect(() => {
@@ -92,6 +94,11 @@ const Hero = () => {
         setSecurityScore(Math.floor(Math.random() * 20) + 70); // 70-90
       }
       
+      // Show user info modal after 2 seconds
+      setTimeout(() => {
+        setShowUserInfoModal(true);
+      }, 2000);
+      
       return data;
     } catch (error) {
       console.error("Error fetching domain statistics:", error);
@@ -102,6 +109,45 @@ const Hero = () => {
       }
       return null;
     }
+  };
+
+  // Function to submit user information
+  const submitUserInfo = async (userData: { name: string; email: string; phone: string }) => {
+    try {
+      const response = await fetch('http://localhost/cyber-x-radar/server/api/scans/create.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          domain_name: domain,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit user data');
+      }
+      
+      const data = await response.json();
+      
+      if (data.status !== 'success') {
+        throw new Error(data.message || 'Failed to submit user data');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error submitting user data:', error);
+      throw error;
+    }
+  };
+
+  // Function called when user info submission is completed
+  const handleUserInfoCompleted = () => {
+    setShowUserInfoModal(false);
+    setIsModalOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -896,6 +942,19 @@ const Hero = () => {
         }
       `}</style> */}
       
+      {/* User Info Collection Modal */}
+      <AnimatePresence>
+        {showUserInfoModal && domainStats && (
+          <CollectUserInfoModal 
+            domain={domain}
+            isOpen={showUserInfoModal}
+            onClose={() => setShowUserInfoModal(false)}
+            onSubmit={submitUserInfo}
+            onCompleted={handleUserInfoCompleted}
+          />
+        )}
+      </AnimatePresence>
+      
       {/* Security Test Results Modal */}
       <AnimatePresence>
         {isModalOpen && showTestResults && domainStats && (
@@ -1258,65 +1317,6 @@ const Hero = () => {
                             {domainStats.publicBreaches === "None" ? "None detected" : domainStats.publicBreaches}
                           </span>
                         </div>
-                        <div className="mt-3 pt-3 border-t border-indigo-900/30">
-                          <div className="text-xs text-gray-400 mb-1">Risk Level</div>
-                          <div className="h-1.5 bg-[#2A2A40] rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-indigo-500 to-indigo-700 w-1/4 rounded-full"></div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 flex justify-end">
-                        <button className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
-                          <span>Full Analysis</span>
-                          <FaAngleRight size={12} />
-                        </button>
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
-                
-                {/* Exposure Timeline Chart - enhanced version */}
-                <div className="mb-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="h-5 w-1 bg-blue-500 rounded-full"></div>
-                    <h3 className="text-lg font-semibold text-blue-300">Exposure Timeline</h3>
-                  </div>
-                  
-                  <div className="bg-[#1E1E35] p-5 rounded-lg border border-indigo-900/30">
-                    <div className="h-64 relative">
-                      {/* Chart grid lines with labels */}
-                      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                        {[...Array(5)].map((_, i) => (
-                          <div key={i} className="w-full border-t border-gray-700/30 flex items-center">
-                            <span className="text-xs text-gray-500 bg-[#1E1E35] pr-2 -ml-2">{80 - i * 20}</span>
-                            <div className="flex-grow"></div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {/* Chart x-axis (months) */}
-                      <div className="flex justify-between absolute bottom-0 left-0 right-0 text-xs text-gray-400 pt-2 border-t border-gray-700/30">
-                        {timelineData.months.map((month, i) => (
-                          <div key={i} className="text-center">
-                            <div className="h-2 w-0.5 bg-gray-700/30 mx-auto mb-1"></div>
-                            {month}
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {/* Enhanced data visualization */}
-                      <div className="absolute inset-x-0 bottom-8 top-0">
-                        {/* Darkweb data line */}
-                        <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
-                          <defs>
-                            <linearGradient id="darkwebGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                            </linearGradient>
-                          </defs>
-                          <motion.path
-                            initial={{ pathLength: 0, opacity: 0 }}
                             animate={{ pathLength: 1, opacity: 1 }}
                             transition={{ duration: 1.5, delay: 0.5 }}
                             d={`M0,${100 - (timelineData.darkwebData[0]/50*80)} ${timelineData.darkwebData.map((val, i) => `L${(i/(timelineData.months.length-1))*100},${100 - (val/50*80)}`).join(' ')}`}

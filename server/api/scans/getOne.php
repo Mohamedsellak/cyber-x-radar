@@ -15,54 +15,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Authenticate request
 $auth = new AuthMiddleware();
-$auth->CheckAuth();
+$userData = $auth->CheckAuth();
 
 $db = new DbMethods();
 
 // GET method only
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Get a specific user by ID
+    // Get a specific scan by ID
     if (!isset($_GET['id'])) {
         http_response_code(400);
         echo json_encode([
             'status' => 'error',
-            'message' => 'User ID is required'
+            'message' => 'Scan ID is required'
         ]);
         exit();
     }
     
-    $userId = $_GET['id'];
+    $scanId = $_GET['id'];
     
-    // Validate user ID
-    if (!is_numeric($userId) || $userId <= 0) {
+    // Validate scan ID
+    if (!is_numeric($scanId) || $scanId <= 0) {
         http_response_code(400);
         echo json_encode([
             'status' => 'error',
-            'message' => 'Invalid user ID'
+            'message' => 'Invalid scan ID'
         ]);
         exit();
     }
     
-    // Query to get user by ID
-    $user = $db->selectOne("users", $userId);
+    // Get the scan
+    $scan = $db->selectOne("scans", $scanId);
     
-    if (empty($user)) {
-        http_response_code(400);
+    if (empty($scan)) {
+        http_response_code(404);
         echo json_encode([
             'status' => 'error',
-            'message' => 'User not found',
-            'data' => null
+            'message' => 'Scan not found'
         ]);
-    } else {
-        // Remove password for security
-        unset($user['password']);
-        
-        echo json_encode([
-            'status' => 'success',
-            'message' => 'User retrieved successfully',
-            'data' => $user
-        ]);
+        exit();
     }
+    
+    echo json_encode([
+        'status' => 'success',
+        'message' => 'Scan retrieved successfully',
+        'data' => $scan
+    ]);
 } else {
     http_response_code(405);
     echo json_encode([

@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Access-Control-Allow-Methods: DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 require_once '../../db/db_methods.php';
@@ -19,48 +19,51 @@ $auth->CheckAuth();
 
 $db = new DbMethods();
 
-// GET method only
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Get a specific user by ID
+// DELETE method only
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    // Get token ID from query params
     if (!isset($_GET['id'])) {
         http_response_code(400);
         echo json_encode([
             'status' => 'error',
-            'message' => 'User ID is required'
+            'message' => 'Token ID is required'
         ]);
         exit();
     }
     
-    $userId = $_GET['id'];
+    $tokenId = $_GET['id'];
     
-    // Validate user ID
-    if (!is_numeric($userId) || $userId <= 0) {
-        http_response_code(400);
+    // Check if token exists
+    $token = $db->selectOne("tokens", $tokenId);
+    
+    if (empty($token)) {
+        http_response_code(404);
         echo json_encode([
             'status' => 'error',
-            'message' => 'Invalid user ID'
+            'message' => 'Token not found'
         ]);
         exit();
     }
     
-    // Query to get user by ID
-    $user = $db->selectOne("users", $userId);
+    // Add debug logging
+    error_log("Attempting to delete token with ID: $tokenId");
     
-    if (empty($user)) {
-        http_response_code(400);
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'User not found',
-            'data' => null
-        ]);
-    } else {
-        // Remove password for security
-        unset($user['password']);
-        
+    // Delete the token - using the same method signature that works for users
+    $result = $db->delete('tokens', $tokenId);
+    
+    // Debug the result
+    error_log("Delete operation result: " . ($result ? "true" : "false"));
+    
+    if ($result) {
         echo json_encode([
             'status' => 'success',
-            'message' => 'User retrieved successfully',
-            'data' => $user
+            'message' => 'Token deleted successfully'
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Failed to delete token from database'
         ]);
     }
 } else {

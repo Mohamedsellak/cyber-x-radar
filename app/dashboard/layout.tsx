@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   FaRadiation, FaTachometerAlt, FaUsers, FaEnvelope, 
@@ -9,6 +9,7 @@ import {
   FaSignOutAlt, FaBell, FaSearch, FaCog, FaUser
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function DashboardLayout({
   children,
@@ -18,6 +19,26 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
+  
+  // Protect the dashboard routes
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+  
+  // If still loading or not authenticated, show loading state
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#0A0A1F]">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>;
+  }
+  
+  if (!isAuthenticated) {
+    return null; // Don't render anything, will redirect to login
+  }
   
   // Simplified navigation items based on data models
   const navItems = [
@@ -27,6 +48,10 @@ export default function DashboardLayout({
     { name: 'API Tokens', href: '/dashboard/tokens', icon: <FaKey /> },
     { name: 'Scan History', href: '/dashboard/scans', icon: <FaGlobe /> },
   ];
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0A0A1F] to-[#121221] text-gray-100">
@@ -100,8 +125,8 @@ export default function DashboardLayout({
                   <FaUser size={14} />
                 </div>
                 <div className="hidden md:block">
-                  <div className="text-sm font-medium">Admin User</div>
-                  <div className="text-xs text-gray-400">Administrator</div>
+                  <div className="text-sm font-medium">{user?.name || 'Admin User'}</div>
+                  <div className="text-xs text-gray-400">{user?.email || 'Administrator'}</div>
                 </div>
               </div>
             </div>
@@ -178,15 +203,15 @@ export default function DashboardLayout({
 
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="border-t border-indigo-900/50 pt-4">
-            <Link
-              href="/logout"
+            <button
+              onClick={handleLogout}
               className="flex items-center gap-3 px-3 py-2 text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
             >
               <FaSignOutAlt />
               {(sidebarOpen || mobileMenuOpen) && (
                 <span>Logout</span>
               )}
-            </Link>
+            </button>
           </div>
         </div>
         
