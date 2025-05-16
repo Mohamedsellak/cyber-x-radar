@@ -80,7 +80,7 @@ export default function ContactPage() {
               Contact Us
             </h1>
             <p className="text-gray-400">
-              Have questions about our security services? Send us a message and we'll get back to you shortly.
+              Have questions about our security services? Send us a message and we&apos;ll get back to you shortly.
             </p>
           </div>
           

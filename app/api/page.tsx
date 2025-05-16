@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaKey, FaGlobe, FaCode, FaCheck, FaCopy, FaShieldAlt, FaExclamationTriangle, FaSkull } from 'react-icons/fa';
+import { FaKey, FaCode, FaCheck, FaCopy, FaShieldAlt, FaExclamationTriangle, FaSkull } from 'react-icons/fa';
 
 export default function ApiDocumentation() {
   const [activeSample, setActiveSample] = useState('curl');

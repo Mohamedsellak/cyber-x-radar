@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { FaEnvelope, FaTimes, FaTrash, FaBuilding } from 'react-icons/fa';
+import { FaEnvelope, FaTimes, FaTrash } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
 interface Contact {

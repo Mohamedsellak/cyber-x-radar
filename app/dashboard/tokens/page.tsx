@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
   FaKey, FaPlus, FaSearch, FaEye, FaEyeSlash, 
-  FaTrash, FaCheck, FaTimes, FaCopy, FaBuilding,
+  FaTrash, FaCopy, FaBuilding, FaEdit,
   FaExclamationTriangle, FaSyncAlt
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import TokenModal from './components/TokenModal';
 import DeleteTokenModal from './components/DeleteTokenModal';
+import UpdateTokenModal from './components/UpdateTokenModal';
 
 interface Token {
   id: number;
@@ -22,9 +23,10 @@ export default function TokenManagement() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  //const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [hiddenTokens, setHiddenTokens] = useState<number[]>([]);
   const [copySuccess, setCopySuccess] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -125,6 +127,48 @@ export default function TokenManagement() {
       }
     } catch (err) {
       console.error('Error generating token:', err);
+      throw err;
+    }
+  };
+
+  // Prepare to update token
+  const handleUpdateClick = (token: Token) => {
+    setSelectedToken(token);
+    setUpdateModalOpen(true);
+  };
+
+  // Update token
+  const handleUpdateToken = async (id: number, company: string, name: string) => {
+    try {
+      const authToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+      
+      if (!authToken) {
+        throw new Error('Authentication token not found');
+      }
+      
+      const response = await fetch('http://localhost/cyber-x-radar/server/api/tokens/update.php', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id, company, name })
+      });
+      
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        // Update the token in the list
+        setTokens(tokens.map(token => 
+          token.id === id ? { ...token, company, name } : token
+        ));
+        setUpdateModalOpen(false);
+        setSelectedToken(null);
+      } else {
+        throw new Error(data.message || 'Failed to update token');
+      }
+    } catch (err) {
+      console.error('Error updating token:', err);
       throw err;
     }
   };
@@ -288,13 +332,22 @@ export default function TokenManagement() {
                     </td>
                     <td className="py-3 px-4 text-gray-400 text-sm">{token.created_at || 'Unknown'}</td>
                     <td className="py-3 px-4">
-                      <button 
-                        onClick={() => handleDeleteClick(token)}
-                        className="p-1 text-red-400 hover:text-red-300 transition-colors"
-                        title="Revoke Token"
-                      >
-                        <FaTrash size={16} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => handleUpdateClick(token)}
+                          className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
+                          title="Edit Token"
+                        >
+                          <FaEdit size={16} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteClick(token)}
+                          className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                          title="Revoke Token"
+                        >
+                          <FaTrash size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -318,6 +371,20 @@ export default function TokenManagement() {
               isOpen={isModalOpen} 
               onClose={() => setIsModalOpen(false)} 
               onSubmit={handleGenerateToken} 
+            />
+          </div>
+        )}
+      </AnimatePresence>
+      
+      {/* Token update modal */}
+      <AnimatePresence>
+        {updateModalOpen && selectedToken && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <UpdateTokenModal 
+              token={selectedToken}
+              isOpen={updateModalOpen}
+              onClose={() => setUpdateModalOpen(false)} 
+              onUpdate={handleUpdateToken} 
             />
           </div>
         )}

@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         http_response_code(400);
         echo json_encode([
             'status' => 'error',
-            'message' => 'Name, email, company_name, inquiry_type, and message are required'
+            'message' => 'Name, email, and message are required'
         ]);
         exit();
     }

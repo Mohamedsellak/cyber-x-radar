@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaShieldAlt, FaLock, FaBug, FaInfoCircle, FaChartLine, FaExclamationTriangle, FaAngleRight, FaGlobe, FaRegCheckCircle, FaRadiation, FaServer, FaUserShield, FaSync, FaFileDownload } from 'react-icons/fa';
+import { FaShieldAlt, FaLock, FaBug, FaInfoCircle, FaChartLine, FaGlobe, FaRadiation, FaServer, FaUserShield, FaSearch, FaExclamationTriangle, FaRegCheckCircle } from 'react-icons/fa';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
-import CollectUserInfoModal from './HeroModals/CollectUserInfoModal';
+import CollectUserInfoModal from './heroModals/CollectUserInfoModal';
+import SecurityResultsModal from './heroModals/SecurityResultsModal';
 
-// Define the API response type
+// Define the domain stats response interface
 interface DomainStatisticsResponse {
   Severity: string;
   malwareLogs: string;
@@ -14,6 +15,8 @@ interface DomainStatisticsResponse {
   compromisedUsers: string;
   lastMention: string;
   asnsCount: string;
+  status?: string;
+  message?: string;
 }
 
 const Hero = () => {
@@ -22,15 +25,18 @@ const Hero = () => {
   const [error, setError] = useState('');
   const [securityScore, setSecurityScore] = useState(65);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [scanCount, setScanCount] = useState(Math.floor(Math.random() * 10) + 20);
+  const [scanCount, setScanCount] = useState(20); // Start with a fixed value
+  const [blurResults, setBlurResults] = useState(false);
   const radarRef = useRef<HTMLDivElement>(null);
   const controls = useAnimation();
   
-  // New state for API response data
+  // State for API response data
   const [domainStats, setDomainStats] = useState<DomainStatisticsResponse | null>(null);
   const [showTestResults, setShowTestResults] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showUserInfoModal, setShowUserInfoModal] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [userClosedInfoModal, setUserClosedInfoModal] = useState(false);
   
   // Update scan count periodically to simulate live data
   useEffect(() => {
@@ -54,108 +60,28 @@ const Hero = () => {
     return () => clearInterval(interval);
   }, [controls]);
 
+  // This will only run in the browser, after hydration is complete
+  useEffect(() => {
+    setScanCount(Math.floor(Math.random() * 10) + 20);
+    setIsClient(true);
+  }, []);
+
   const validateDomain = (domain: string) => {
     const pattern = /^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]$/;
     return pattern.test(domain);
   };
 
-  // Function to fetch domain statistics from API
-  const fetchDomainStatistics = async (domainName: string) => {
-    try {
-      // Make the actual API call (this will update the UI once data arrives)
-      const response = await fetch(
-        `https://scan.cyberxradar.com/api-proxy.php?domain=${domainName}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch data: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      // Handle error response case
-      if (data.status === "error") {
-        setError(data.message || "Failed to fetch security data. Try another domain.");
-        setIsSubmitting(false);
-        if (radarRef.current) {
-          radarRef.current.classList.remove('active-scan');
-        }
-        return null;
-      }
-      
-      setDomainStats(data);
-      
-      // Generate security score based on severity
-      if (data.Severity === "High") {
-        setSecurityScore(Math.floor(Math.random() * 20) + 10); // 10-30
-      } else if (data.Severity === "Medium") {
-        setSecurityScore(Math.floor(Math.random() * 20) + 40); // 40-60
-      } else {
-        setSecurityScore(Math.floor(Math.random() * 20) + 70); // 70-90
-      }
-      
-      // Show user info modal after 2 seconds
-      setTimeout(() => {
-        setShowUserInfoModal(true);
-      }, 2000);
-      
-      return data;
-    } catch (error) {
-      console.error("Error fetching domain statistics:", error);
-      setError("Failed to fetch security data. Please try again.");
-      setIsSubmitting(false);
-      if (radarRef.current) {
-        radarRef.current.classList.remove('active-scan');
-      }
-      return null;
-    }
-  };
-
-  // Function to submit user information
-  const submitUserInfo = async (userData: { name: string; email: string; phone: string }) => {
-    try {
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/scans/create.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          domain_name: domain,
-          name: userData.name,
-          email: userData.email,
-          phone: userData.phone
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to submit user data');
-      }
-      
-      const data = await response.json();
-      
-      if (data.status !== 'success') {
-        throw new Error(data.message || 'Failed to submit user data');
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Error submitting user data:', error);
-      throw error;
-    }
-  };
-
-  // Function called when user info submission is completed
-  const handleUserInfoCompleted = () => {
-    setShowUserInfoModal(false);
-    setIsModalOpen(true);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  // Function to handle domain form submission
+  const handleDomainSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Reset all states to their initial values
     setError('');
     setShowSuccessMessage(false);
     setShowTestResults(false);
     setIsModalOpen(false);
+    setBlurResults(false);
+    setUserClosedInfoModal(false);
     
     if (!domain.trim()) {
       setError('Please enter a domain name');
@@ -174,46 +100,147 @@ const Hero = () => {
       radarRef.current.classList.add('active-scan');
     }
     
-    // Fetch domain statistics
-    fetchDomainStatistics(domain).then((data) => {
-      setIsSubmitting(false);
+    try {
+      // Make API call
+      const response = await fetch(
+        `https://localhost/cyber-x-radar/server/api/api-proxy.php?domain=${domain}`
+      );
       
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Handle error response case
+      if (data.status === "error") {
+        throw new Error(data.message || "Failed to fetch security data. Try another domain.");
+      }
+      
+      // Generate security score based on severity
+      let score = 65;
+      if (data.Severity === "High") {
+        score = Math.floor(Math.random() * 20) + 10; // 10-30
+      } else if (data.Severity === "Medium") {
+        score = Math.floor(Math.random() * 20) + 40; // 40-60
+      } else {
+        score = Math.floor(Math.random() * 20) + 70; // 70-90
+      }
+      
+      // Update state with API results
+      setSecurityScore(score);
+      setDomainStats(data);
+      setShowSuccessMessage(true);
+      
+      // First show results without blur
+      setIsModalOpen(true);
+      setShowTestResults(true);
+      
+      // Show success message
+      setShowSuccessMessage(true);
+      
+      // Log for debugging
+      console.log('Initial modal state set: no blur');
+      
+      // Hide success message after a few seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      
+      // After 2 seconds, apply blur and show user info modal
+      // Use a separate function to ensure it runs in a new call stack
+      const timer = setTimeout(() => {
+        console.log('Applying blur and showing user info modal');
+        setBlurResults(true);
+        
+        // Small delay before showing the modal for better UX
+        setTimeout(() => {
+          setShowUserInfoModal(true);
+        }, 100);
+      }, 2000);
+      
+      // Clean up timer if component unmounts
+      return () => clearTimeout(timer);
+      
+    } catch (error) {
+      console.error("Error in domain scan:", error);
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Failed to fetch security data. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
       if (radarRef.current) {
         radarRef.current.classList.remove('active-scan');
       }
-      
-      // Only proceed if we have valid data (not error)
-      if (data) {
-        setShowSuccessMessage(true);
-        
-        // Open the modal to show results
-        setIsModalOpen(true);
-        setShowTestResults(true);
-        
-        // Hide success message after a few seconds
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-        }, 3000);
-      }
-    });
+    }
   };
-  
-  // Generate monthly data points for the exposure timeline chart
-  const generateTimelineData = () => {
-    const months = [
-      "2023-07", "2023-10", "2024-01", "2024-04", 
-      "2024-07", "2024-10", "2025-01"
-    ];
-    
-    const darkwebData = months.map(() => Math.floor(Math.random() * 50));
-    const malwareData = months.map(() => Math.floor(Math.random() * 40));
-    
-    return { months, darkwebData, malwareData };
-  };
-  
-  const timelineData = generateTimelineData();
 
-  // Stats data
+  // Fix user info completion handler
+  const handleUserInfoCompleted = () => {
+    console.log('User info completed - removing blur');
+    setShowUserInfoModal(false);
+    setBlurResults(false); // Remove blur when user completes the form
+    setUserClosedInfoModal(false);
+  };
+
+  // Fix user info modal close handler with debug logs
+  const handleCloseUserInfoModal = () => {
+    console.log('User info modal closed - showing overlay message');
+    setShowUserInfoModal(false);
+    setUserClosedInfoModal(true); // This MUST be set to true when modal is closed
+    
+    // Add a console log to verify the state change
+    setTimeout(() => {
+      console.log('userClosedInfoModal state is now:', userClosedInfoModal);
+    }, 100);
+  };
+
+  // Function to reopen user info modal
+  const handleReopenUserInfoModal = () => {
+    console.log('Reopening user info modal');
+    setShowUserInfoModal(true);
+    setUserClosedInfoModal(false);
+  };
+
+  // Function to close all modals and reset scan
+  const handleCloseAllModals = () => {
+    setIsModalOpen(false);
+    setShowUserInfoModal(false);
+    setShowTestResults(false);
+  };
+
+  // Handle scan another domain action
+  const handleScanAnother = () => {
+    setIsModalOpen(false);
+    setShowTestResults(false);
+    setDomainStats(null);
+    setDomain('');
+  };
+  
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        staggerChildren: 0.1,
+        delayChildren: 0.3
+      }
+    }
+  };
+  
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 100 }
+    }
+  };
+
+  // Stats data for the UI
   const securityStats = [
     { 
       title: 'Exposed Credentials', 
@@ -240,32 +267,13 @@ const Hero = () => {
       color: 'blue'
     }
   ];
-  
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        staggerChildren: 0.1,
-        delayChildren: 0.3
-      }
-    }
-  };
-  
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { type: 'spring', stiffness: 100 }
-    }
-  };
 
-  // Helper function to safely parse numerical values
-  const safeParseInt = (value: string): number => {
-    if (!value || value === "None") return 0;
-    return parseInt(value) || 0;
+  // Add specific function to handle modal blur
+  const handleModalBlur = () => {
+    if (isClient) {
+      return blurResults && userClosedInfoModal;
+    }
+    return false; // Default to false on server to prevent hydration mismatch
   };
 
   return (
@@ -465,7 +473,7 @@ const Hero = () => {
                   </p>
                 </div>
                 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleDomainSubmit}>
                   <div className="flex flex-col sm:flex-row gap-4 mb-4">
                     <div className="relative flex-grow group">
                       <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-blue-400 transition-colors duration-200">
@@ -476,13 +484,9 @@ const Hero = () => {
                         placeholder="Enter your domain name (e.g., example.com)"
                         className="w-full pl-12 pr-10 py-4 rounded-md border border-indigo-900/50 bg-[#1A1A2A] text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-lg shadow-black/20 group-hover:shadow-blue-900/20"
                         value={domain}
-                        onChange={(e) => {
-                          setDomain(e.target.value);
-                          if (error) setError('');
-                        }}
+                        onChange={(e) => setDomain(e.target.value)}
                         aria-label="Domain name"
                       />
-                      {/* ...existing input field code... */}
                     </div>
                     <motion.button 
                       whileHover={{ scale: 1.05 }}
@@ -563,6 +567,7 @@ const Hero = () => {
                 </div>
               </motion.div>
               
+              {/* Features list */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -584,6 +589,7 @@ const Hero = () => {
                 ))}
               </motion.div>
               
+              {/* Security Platform Features */}
               <div className="border-t border-indigo-900/30 pt-8 mb-10">
                 <h4 className="text-gray-300 text-sm uppercase font-semibold tracking-wider mb-5">Security Platform Features</h4>
                 <motion.div 
@@ -614,6 +620,7 @@ const Hero = () => {
                 </motion.div>
               </div>
               
+              {/* Trusted by industry leaders */}
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -660,7 +667,7 @@ const Hero = () => {
             </div>
           </motion.div>
           
-          {/* right side content */}
+          {/* Right side content: Security Stats Dashboard */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -780,7 +787,7 @@ const Hero = () => {
                         key={index}
                         variants={itemVariants}
                         whileHover={{ scale: 1.02, y: -2 }}
-                        className="bg-gradient-to-b from-[#333333] to-[#2A2A2A] hover:from-[#383838] hover:to-[#2D2D2D] p-4 rounded-md border border-gray-700/30 shadow-lg transition-all duration-300 cursor-pointer group/item relative overflow-hidden"
+                        className="bg-gradient-to-b from-[#080f28] to-[#100742] hover:from-[#383838] hover:to-[#2D2D2D] p-4 rounded-md border border-gray-700/30 shadow-lg transition-all duration-300 cursor-pointer group/item relative overflow-hidden"
                       >
                         {/* Accent border */}
                         <div className={`absolute left-0 top-0 w-1 h-full ${
@@ -802,8 +809,8 @@ const Hero = () => {
                             }`}>{item.status}</span>
                           </div>
                           <div className="flex items-end justify-between">
-                            <div className="text-2xl font-bold group-hover/item:text-blue-400 transition-colors">{item.count}</div>
-                            <span className="text-xs text-gray-400 group-hover/item:text-gray-300 transition-colors">{item.detail}</span>
+                            <div className="text-2xl font-bold group-hover:item:text-blue-400 transition-colors">{item.count}</div>
+                            <span className="text-xs text-gray-400 group-hover:item:text-gray-300 transition-colors">{item.detail}</span>
                           </div>
                         </div>
                       </motion.div>
@@ -816,7 +823,7 @@ const Hero = () => {
                       whileTap={{ scale: 0.97 }}
                       className="flex-grow px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-medium rounded-md transition-all duration-200 shadow-lg hover:shadow-blue-900/30 flex items-center justify-center gap-2"
                     >
-                      View Full Report <FaAngleRight size={16} />
+                      View Full Report <FaRadiation size={16} />
                     </motion.button>
                     <motion.button 
                       whileHover={{ rotate: 180 }}
@@ -869,87 +876,13 @@ const Hero = () => {
       {/* Bottom decorative line */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-700 to-transparent"></div>
       
-      {/* Add a special CSS classes for custom animations */}
-      {/* <style jsx global>{`
-        @keyframes shimmer {
-          100% { transform: translateX(100%); }
-        }
-        
-        @keyframes ping-slow {
-          0% { transform: scale(1); opacity: 1; }
-          75%, 100% { transform: scale(1.5); opacity: 0; }
-        }
-        
-        @keyframes radar-sweep {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes radar-ping {
-          0% { transform: scale(0.5); opacity: 1; }
-          70%, 100% { transform: scale(2); opacity: 0; }
-        }
-        
-        .group-hover\\:animate-shimmer {
-          animation: shimmer 1.5s infinite;
-        }
-        
-        .animate-ping-slow {
-          animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-        
-        .animation-delay-500 {
-          animation-delay: 500ms;
-        }
-        
-        .radar-container {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(16,62,115,0.6) 0%, rgba(13,41,73,0.4) 50%, rgba(10,10,31,0.2) 100%);
-          overflow: hidden;
-        }
-        
-        .radar-background {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: radial-gradient(circle, rgba(13,41,73,0.2) 0%, rgba(10,10,31,0.1) 100%);
-        }
-        
-        .radar-sweep {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
-          clip-path: polygon(50% 50%, 100% 50%, 100% 0, 0 0, 0 50%);
-          background: linear-gradient(90deg, rgba(56,189,248,0.1) 0%, rgba(99,102,241,0.4) 100%);
-        }
-        
-        .active-scan .radar-sweep {
-          animation: radar-sweep 1.5s linear infinite;
-        }
-        
-        .radar-ping {
-          animation: radar-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-          border: 2px solid #38bdf8;
-          border-radius: 50%;
-        }
-      `}</style> */}
-      
-      {/* User Info Collection Modal */}
+      {/* User Info Collection Modal - Higher z-index than results modal */}
       <AnimatePresence>
-        {showUserInfoModal && domainStats && (
+        {isClient && showUserInfoModal && domainStats && (
           <CollectUserInfoModal 
             domain={domain}
             isOpen={showUserInfoModal}
-            onClose={() => setShowUserInfoModal(false)}
-            onSubmit={submitUserInfo}
+            onClose={handleCloseUserInfoModal}
             onCompleted={handleUserInfoCompleted}
           />
         )}
@@ -957,516 +890,18 @@ const Hero = () => {
       
       {/* Security Test Results Modal */}
       <AnimatePresence>
-        {isModalOpen && showTestResults && domainStats && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={() => setIsModalOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              transition={{ type: "spring", damping: 25 }}
-              className="bg-gradient-to-b from-[#1A1A3A]/95 to-[#121232]/95 rounded-xl border border-indigo-800/50 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal Header with glow effect */}
-              <div className="relative p-6 border-b border-indigo-900/50">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/70 to-transparent"></div>
-                
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="relative h-10 w-10">
-                      <div className="radar-container">
-                        <div className="radar-background rounded-full"></div>
-                        <motion.div 
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                          className="radar-sweep"
-                        ></motion.div>
-                      </div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <FaRadiation size={16} className="text-blue-400" />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
-                        Cyber X-Radar Report
-                      </h2>
-                      <p className="text-sm text-blue-300">
-                        <span className="font-semibold">{domain}</span> Security Assessment
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <span className={`text-sm font-medium px-3 py-1 rounded-full ${
-                      domainStats.Severity === "High" ? "bg-red-900/50 text-red-300 border border-red-700/30" : 
-                      domainStats.Severity === "Medium" ? "bg-yellow-900/50 text-yellow-300 border border-yellow-700/30" : 
-                      "bg-green-900/50 text-green-300 border border-green-700/30"
-                    }`}>
-                      {domainStats.Severity} Risk
-                    </span>
-                    
-                    <button 
-                      onClick={() => setIsModalOpen(false)}
-                      className="w-8 h-8 rounded-full bg-gray-800/50 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700/80 transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Modal Content with scrollable area */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-100px)]">
-                {/* Security Score Section */}
-                <div className="flex flex-col md:flex-row gap-8 mb-8">
-                  <div className="relative h-40 w-40 flex-shrink-0 mx-auto md:mx-0">
-                    <div className="absolute inset-0 rounded-full bg-gray-800/30 shadow-inner"></div>
-                    <motion.svg 
-                      className="w-full h-full relative z-10" 
-                      viewBox="0 0 100 100"
-                      initial={{ rotate: -90 }}
-                    >
-                      <defs>
-                        <linearGradient id="modalScoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor={securityScore > 70 ? "#10B981" : securityScore > 40 ? "#FBBF24" : "#EF4444"} />
-                          <stop offset="100%" stopColor={securityScore > 70 ? "#059669" : securityScore > 40 ? "#D97706" : "#B91C1C"} />
-                        </linearGradient>
-                      </defs>
-                      <circle className="text-[#2A2A40]" strokeWidth="10" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
-                      <motion.circle 
-                        className="transition-all duration-1000"
-                        strokeWidth="10" 
-                        strokeDasharray="251.2"
-                        initial={{ strokeDashoffset: 251.2 }}
-                        animate={{ strokeDashoffset: 251.2 - (securityScore / 100 * 251.2) }} 
-                        transition={{ duration: 1.5, ease: "easeInOut" }}
-                        strokeLinecap="round" 
-                        stroke="url(#modalScoreGradient)" 
-                        fill="transparent" 
-                        r="40" 
-                        cx="50" 
-                        cy="50" 
-                      />
-                      <text x="50" y="45" textAnchor="middle" className="text-3xl font-bold fill-current text-white">{securityScore}</text>
-                      <text x="50" y="62" textAnchor="middle" className="text-lg font-medium fill-current text-gray-400">/100</text>
-                    </motion.svg>
-                    
-                    {/* Decorative pulse rings */}
-                    <div className="absolute inset-0 z-0">
-                      <div className="absolute inset-0 animate-ping-slow rounded-full bg-blue-500/10 backdrop-blur-sm"></div>
-                      <div className="absolute inset-2 animate-ping-slow animation-delay-500 rounded-full bg-blue-500/5 backdrop-blur-sm"></div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex-grow">
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="font-semibold text-gray-100 text-xl">Security Score Assessment</h3>
-                      <div className="text-xs text-gray-400">Generated on {new Date().toLocaleDateString()}</div>
-                    </div>
-                    
-                    <p className="text-gray-300 mb-4">
-                      {securityScore > 70 ? 
-                        'Your domain has strong security posture with minimal vulnerabilities. Continue monitoring to maintain this level of security.' : 
-                      securityScore > 40 ? 
-                        'Your domain has several security vulnerabilities that require attention. Address these issues to reduce risk of compromise.' : 
-                        'Your domain has critical security issues that need immediate remediation. Significant risk of data breach or system compromise exists.'
-                      }
-                    </p>
-                    
-                    <div className="space-y-3">
-                      <div className="relative pt-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="text-sm font-medium text-blue-300">Overall Security</div>
-                          <div className="text-sm font-medium text-blue-300">{securityScore}%</div>
-                        </div>
-                        <div className="h-2 bg-[#2A2A40] rounded-full overflow-hidden shadow-inner">
-                          <motion.div 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${securityScore}%` }}
-                            transition={{ duration: 1, delay: 0.5 }}
-                            className={`h-full rounded-full`}
-                            style={{ background: `linear-gradient(to right, ${
-                              securityScore > 70 ? '#10B981, #059669' : 
-                              securityScore > 40 ? '#FBBF24, #D97706' : 
-                              '#EF4444, #B91C1C'
-                            })` }}
-                          ></motion.div>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                        <div className="bg-[#1E1E35] p-3 rounded-lg border border-indigo-900/30">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-gray-400">Threat Level</span>
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                              domainStats.Severity === "High" ? "bg-red-900/50 text-red-300" : 
-                              domainStats.Severity === "Medium" ? "bg-yellow-900/50 text-yellow-300" : 
-                              "bg-green-900/50 text-green-300"
-                            }`}>
-                              {domainStats.Severity}
-                            </span>
-                          </div>
-                          <div className="mt-1 text-lg font-medium text-gray-200">
-                            {domainStats.Severity === "High" ? "Critical Attention Required" : 
-                             domainStats.Severity === "Medium" ? "Moderate Issues Found" : 
-                             "Low Risk Detected"}
-                          </div>
-                        </div>
-                        
-                        <div className="bg-[#1E1E35] p-3 rounded-lg border border-indigo-900/30">
-                          <div className="flex items-center gap-1 mb-1">
-                            <span className="text-xs text-gray-400">Last Breach Mention</span>
-                            <div className="tooltip-container group relative">
-                              <FaInfoCircle size={12} className="text-gray-500" />
-                              <div className="tooltip absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-xs text-gray-300 rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-48 z-10">
-                                Date when your domain was last mentioned in data breaches or dark web
-                              </div>
-                            </div>
-                          </div>
-                          <div className="mt-1 text-lg font-medium text-yellow-300">
-                            {domainStats.lastMention === "N/A" ? "No mentions found" : domainStats.lastMention}
-                          </div>
-                        </div>
-                        
-                        <div className="bg-[#1E1E35] p-3 rounded-lg border border-indigo-900/30">
-                          <div className="flex items-center gap-1 mb-1">
-                            <span className="text-xs text-gray-400">Compromised Accounts</span>
-                          </div>
-                          <div className="mt-1 text-lg font-medium text-red-400">
-                            {safeParseInt(domainStats.compromisedUsers) + safeParseInt(domainStats.compromisedEmployees) > 0 
-                              ? `${safeParseInt(domainStats.compromisedUsers) + safeParseInt(domainStats.compromisedEmployees)} total accounts` 
-                              : "No compromised accounts found"}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Detailed Findings Section */}
-                <div className="mb-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="h-5 w-1 bg-blue-500 rounded-full"></div>
-                    <h3 className="text-lg font-semibold text-blue-300">Detailed Security Findings</h3>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Detailed stats cards */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="bg-[#1E1E35] p-4 rounded-lg border border-indigo-900/30 hover:border-indigo-700/50 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-red-900/50 flex items-center justify-center text-red-400">
-                          <FaLock size={18} />
-                        </div>
-                        <div className="flex-grow">
-                          <h4 className="text-gray-200 font-medium">Credential Exposure</h4>
-                          <p className="text-xs text-gray-400">Leaked emails and passwords</p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">Employees</span>
-                          <span className="text-red-400 font-medium">{domainStats.compromisedEmployees}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">Users</span>
-                          <span className="text-red-400 font-medium">{domainStats.compromisedUsers}</span>
-                        </div>
-                        <div className="mt-3 pt-3 border-t border-indigo-900/30">
-                          <div className="text-xs text-gray-400 mb-1">Risk Level</div>
-                          <div className="h-1.5 bg-[#2A2A40] rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-red-500 to-red-700 w-3/4 rounded-full"></div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 flex justify-end">
-                        <button className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
-                          <span>Full Analysis</span>
-                          <FaAngleRight size={12} />
-                        </button>
-                      </div>
-                    </motion.div>
-                    
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="bg-[#1E1E35] p-4 rounded-lg border border-indigo-900/30 hover:border-indigo-700/50 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-yellow-900/50 flex items-center justify-center text-yellow-400">
-                          <FaGlobe size={18} />
-                        </div>
-                        <div className="flex-grow">
-                          <h4 className="text-gray-200 font-medium">Dark Web Exposure</h4>
-                          <p className="text-xs text-gray-400">Mentions in dark forums and marketplaces</p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">Mentions Status</span>
-                          <span className={`font-medium ${domainStats.darkwebMentions === "None" ? "text-green-400" : "text-yellow-400"}`}>
-                            {domainStats.darkwebMentions === "None" ? "No mentions" : domainStats.darkwebMentions}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">Last Detected</span>
-                          <span className="text-yellow-400 font-medium">{domainStats.lastMention}</span>
-                        </div>
-                        <div className="mt-3 pt-3 border-t border-indigo-900/30">
-                          <div className="text-xs text-gray-400 mb-1">Risk Level</div>
-                          <div className="h-1.5 bg-[#2A2A40] rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-yellow-500 to-yellow-700 w-1/2 rounded-full"></div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 flex justify-end">
-                        <button className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
-                          <span>Full Analysis</span>
-                          <FaAngleRight size={12} />
-                        </button>
-                      </div>
-                    </motion.div>
-                    
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="bg-[#1E1E35] p-4 rounded-lg border border-indigo-900/30 hover:border-indigo-700/50 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-900/50 flex items-center justify-center text-blue-400">
-                          <FaBug size={18} />
-                        </div>
-                        <div className="flex-grow">
-                          <h4 className="text-gray-200 font-medium">Malware Detections</h4>
-                          <p className="text-xs text-gray-400">Malicious software targeting your domain</p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">Malware Logs</span>
-                          <span className={`font-medium ${domainStats.malwareLogs === "None" || domainStats.malwareLogs === "N/A" ? "text-green-400" : "text-blue-400"}`}>
-                            {domainStats.malwareLogs === "None" || domainStats.malwareLogs === "N/A" ? "None detected" : domainStats.malwareLogs}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">Detection Type</span>
-                          <span className="text-blue-400 font-medium">
-                            {domainStats.malwareLogs === "None" || domainStats.malwareLogs === "N/A" ? "N/A" : "Infostealer"}
-                          </span>
-                        </div>
-                        <div className="mt-3 pt-3 border-t border-indigo-900/30">
-                          <div className="text-xs text-gray-400 mb-1">Risk Level</div>
-                          <div className="h-1.5 bg-[#2A2A40] rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-blue-500 to-blue-700 w-2/3 rounded-full"></div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 flex justify-end">
-                        <button className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
-                          <span>Full Analysis</span>
-                          <FaAngleRight size={12} />
-                        </button>
-                      </div>
-                    </motion.div>
-                    
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="bg-[#1E1E35] p-4 rounded-lg border border-indigo-900/30 hover:border-indigo-700/50 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-indigo-900/50 flex items-center justify-center text-indigo-400">
-                          <FaServer size={18} />
-                        </div>
-                        <div className="flex-grow">
-                          <h4 className="text-gray-200 font-medium">Infrastructure Security</h4>
-                          <p className="text-xs text-gray-400">Domain and server vulnerabilities</p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">ASNs Count</span>
-                          <span className="text-indigo-400 font-medium">
-                            {domainStats.asnsCount === "0" || domainStats.asnsCount === "None" ? "None detected" : domainStats.asnsCount}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">Public Breaches</span>
-                          <span className={`font-medium ${domainStats.publicBreaches === "None" ? "text-green-400" : "text-indigo-400"}`}>
-                            {domainStats.publicBreaches === "None" ? "None detected" : domainStats.publicBreaches}
-                          </span>
-                        </div>
-                            animate={{ pathLength: 1, opacity: 1 }}
-                            transition={{ duration: 1.5, delay: 0.5 }}
-                            d={`M0,${100 - (timelineData.darkwebData[0]/50*80)} ${timelineData.darkwebData.map((val, i) => `L${(i/(timelineData.months.length-1))*100},${100 - (val/50*80)}`).join(' ')}`}
-                            fill="none"
-                            stroke="#3b82f6"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <motion.path
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 1.5, delay: 1 }}
-                            d={`M0,${100 - (timelineData.darkwebData[0]/50*80)} ${timelineData.darkwebData.map((val, i) => `L${(i/(timelineData.months.length-1))*100},${100 - (val/50*80)}`).join(' ')} L100,100 L0,100 Z`}
-                            fill="url(#darkwebGradient)"
-                          />
-                        </svg>
-                        
-                        {/* Malware data line */}
-                        <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
-                          <defs>
-                            <linearGradient id="malwareGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                              <stop offset="0%" stopColor="#ec4899" stopOpacity="0.3" />
-                              <stop offset="100%" stopColor="#ec4899" stopOpacity="0" />
-                            </linearGradient>
-                          </defs>
-                          <motion.path
-                            initial={{ pathLength: 0, opacity: 0 }}
-                            animate={{ pathLength: 1, opacity: 1 }}
-                            transition={{ duration: 1.5, delay: 0.8 }}
-                            d={`M0,${100 - (timelineData.malwareData[0]/50*80)} ${timelineData.malwareData.map((val, i) => `L${(i/(timelineData.months.length-1))*100},${100 - (val/50*80)}`).join(' ')}`}
-                            fill="none"
-                            stroke="#ec4899"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <motion.path
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 1.5, delay: 1.3 }}
-                            d={`M0,${100 - (timelineData.malwareData[0]/50*80)} ${timelineData.malwareData.map((val, i) => `L${(i/(timelineData.months.length-1))*100},${100 - (val/50*80)}`).join(' ')} L100,100 L0,100 Z`}
-                            fill="url(#malwareGradient)"
-                          />
-                        </svg>
-                        
-                        {/* Data points */}
-                        {timelineData.darkwebData.map((val, i) => (
-                          <motion.div 
-                            key={`darkweb-${i}`}
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.8 + (i * 0.1) }}
-                            className="absolute w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-lg z-10 transform -translate-x-1/2 -translate-y-1/2 hover:w-4 hover:h-4 transition-all duration-200"
-                            style={{ 
-                              left: `${(i/(timelineData.months.length-1))*100}%`, 
-                              top: `${100 - (val/50*80)}%` 
-                            }}
-                          >
-                            <div className="tooltip-container group relative">
-                              <div className="tooltip absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-xs text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-32 z-10">
-                                <div className="font-medium">Dark Web</div>
-                                <div className="flex justify-between">
-                                  <span>{timelineData.months[i]}</span>
-                                  <span className="text-blue-400">{val} mentions</span>
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                        
-                        {timelineData.malwareData.map((val, i) => (
-                          <motion.div 
-                            key={`malware-${i}`}
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 1 + (i * 0.1) }}
-                            className="absolute w-3 h-3 bg-pink-500 rounded-full border-2 border-white shadow-lg z-10 transform -translate-x-1/2 -translate-y-1/2 hover:w-4 hover:h-4 transition-all duration-200"
-                            style={{ 
-                              left: `${(i/(timelineData.months.length-1))*100}%`, 
-                              top: `${100 - (val/50*80)}%` 
-                            }}
-                          >
-                            <div className="tooltip-container group relative">
-                              <div className="tooltip absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-xs text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-32 z-10">
-                                <div className="font-medium">Malware</div>
-                                <div className="flex justify-between">
-                                  <span>{timelineData.months[i]}</span>
-                                  <span className="text-pink-400">{val} detections</span>
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                      
-                      {/* Chart legend */}
-                      <div className="absolute top-0 right-0 flex gap-4 text-xs bg-[#1E1E35] p-2 rounded-bl">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                          <span className="text-blue-300">Dark Web Mentions</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
-                          <span className="text-pink-300">Malware Detections</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Action buttons at bottom */}
-                <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4 border-t border-indigo-900/50">
-                  <div className="flex flex-col sm:flex-row gap-3 items-center">
-                    <button
-                      onClick={() => setIsModalOpen(false)}
-                      className="text-sm text-gray-400 hover:text-gray-300 flex items-center gap-1 transition-colors"
-                    >
-                      <span>Close Report</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => setShowTestResults(false)}
-                      className="px-4 py-2 bg-gray-800/50 hover:bg-gray-700 text-gray-300 text-sm rounded flex items-center gap-1 transition-colors"
-                    >
-                      <FaSync size={12} className="mr-1" /> Scan Another Domain
-                    </button>
-                  </div>
-                  
-                  <div className="flex gap-3">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="px-4 py-2 bg-indigo-800/50 hover:bg-indigo-700/70 text-white text-sm rounded flex items-center gap-1 transition-colors"
-                    >
-                      <FaFileDownload size={12} className="mr-1" /> Download PDF Report
-                    </motion.button>
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white text-sm rounded flex items-center gap-1 transition-colors"
-                    >
-                      Get Complete Protection Plan
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
+        {isClient && isModalOpen && showTestResults && domainStats && (
+          <SecurityResultsModal 
+            domain={domain}
+            isOpen={isModalOpen && showTestResults}
+            domainStats={domainStats}
+            securityScore={securityScore}
+            onClose={handleCloseAllModals}
+            onScanAnother={handleScanAnother}
+            blurred={blurResults}
+            onReopenUserInfoModal={handleReopenUserInfoModal}
+            showOverlayMessage={userClosedInfoModal} // Make sure this is correct
+          />
         )}
       </AnimatePresence>
     </section>

@@ -44,7 +44,7 @@ export default function Login() {
         setError('Invalid email or password. Please try again.');
       }
     } catch (err) {
-      setError('An error occurred during login. Please try again.');
+      setError(`An error occurred during login. Please try again. ${err}`);
     } finally {
       setIsLoading(false);
     }

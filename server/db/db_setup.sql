@@ -14,32 +14,39 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Create an initial admin user (password: admin123)
 INSERT INTO users (name, email, password) 
-VALUES ('Admin User', 'admin@example.com', '$2y$10$Qf0RPCJa5.PdFXSS8ZQo3.m2tHv.ZYZzVzQu8SJnDiLcbdYvj4gZS');
+VALUES ('Admin User', 'sellak@sellak.com', '$2y$10$Qf0RPCJa5.PdFXSS8ZQo3.m2tHv.ZYZzVzQu8SJnDiLcbdYvj4gZS');
 
 -- Optional: Create additional tables you might need
 
 -- Create contacts table
 CREATE TABLE IF NOT EXISTS contacts (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    company_name VARCHAR(20),
+    inquiry_type VARCHAR(100),
+    message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create scans table
+CREATE TABLE IF NOT EXISTS scans (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    domain_name VARCHAR(255) NOT NULL,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100),
     phone VARCHAR(20),
-    company VARCHAR(100),
-    notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create scan_history table
-CREATE TABLE IF NOT EXISTS scan_history (
+-- Create tokens table
+CREATE TABLE IF NOT EXISTS tokens (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    target VARCHAR(255) NOT NULL,
-    scan_type VARCHAR(50) NOT NULL,
-    scan_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    results LONGTEXT,
-    status VARCHAR(20) DEFAULT 'completed',
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    company VARCHAR(255) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

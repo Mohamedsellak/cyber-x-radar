@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  FaEnvelope, FaSearch, FaEye, FaTrash, 
-  FaCheck, FaTimes, FaBuilding, FaSyncAlt, FaToggleOn, FaToggleOff
+  FaEnvelope, FaSearch, FaEye, FaTrash, FaBuilding, FaSyncAlt, FaToggleOn, FaToggleOff
 } from 'react-icons/fa';
 import { AnimatePresence } from 'framer-motion';
 import ViewContactModal from './components/ViewContactModal';
@@ -511,7 +510,7 @@ export default function ContactsPage() {
           <ViewContactModal
             contact={selectedContact}
             onClose={() => setIsViewModalOpen(false)}
-            onDelete={(id) => {
+            onDelete={() => {
               setIsViewModalOpen(false);
               showDeleteConfirmation(selectedContact);
             }}

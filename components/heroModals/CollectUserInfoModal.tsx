@@ -2,17 +2,23 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaEnvelope, FaPhone, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaCheck, FaSpinner } from 'react-icons/fa';
+
+// Define UserInfoData interface directly in the component
+interface UserInfoData {
+  name: string;
+  email: string;
+  phone: string;
+}
 
 interface CollectUserInfoModalProps {
   domain: string;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { name: string; email: string; phone: string }) => Promise<void>;
   onCompleted: () => void;
 }
 
-const CollectUserInfoModal = ({ domain, isOpen, onClose, onSubmit, onCompleted }: CollectUserInfoModalProps) => {
+const CollectUserInfoModal = ({ domain, isOpen, onClose, onCompleted }: CollectUserInfoModalProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -50,6 +56,39 @@ const CollectUserInfoModal = ({ domain, isOpen, onClose, onSubmit, onCompleted }
     return valid;
   };
 
+  // Submit user information directly to API
+  const submitUserInfo = async (userData: UserInfoData) => {
+    try {
+      const response = await fetch('http://localhost/cyber-x-radar/server/api/scans/create.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          domain_name: domain,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit user data');
+      }
+      
+      const data = await response.json();
+      
+      if (data.status !== 'success') {
+        throw new Error(data.message || 'Failed to submit user data');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error submitting user data:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -60,7 +99,7 @@ const CollectUserInfoModal = ({ domain, isOpen, onClose, onSubmit, onCompleted }
     setIsSubmitting(true);
     
     try {
-      await onSubmit({ name, email, phone });
+      await submitUserInfo({ name, email, phone });
       setSubmitSuccess(true);
       
       // Reset form
@@ -70,7 +109,7 @@ const CollectUserInfoModal = ({ domain, isOpen, onClose, onSubmit, onCompleted }
       
       // Auto-close after success
       setTimeout(() => {
-        onCompleted();
+        onCompleted(); // This will remove blur and hide the modal
       }, 2000);
     } catch (error) {
       console.error('Error submitting user data:', error);
@@ -83,19 +122,26 @@ const CollectUserInfoModal = ({ domain, isOpen, onClose, onSubmit, onCompleted }
     }
   };
 
+  // Add a debug log to verify the onClose is called
+  const handleClose = () => {
+    console.log('CollectUserInfoModal: handleClose called');
+    onClose();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: isOpen ? 1 : 0 }}
       exit={{ opacity: 0 }}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm ${!isOpen ? 'pointer-events-none' : ''}`}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4" /* Higher z-index to ensure it's on top */
     >
+      <div className="fixed inset-0 bg-black/50" onClick={handleClose}></div> {/* Use handleClose here */}
       <motion.div
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: isOpen ? 1 : 0.9, y: isOpen ? 0 : 20 }}
         exit={{ scale: 0.9, y: 20 }}
         transition={{ type: "spring", damping: 25 }}
-        className="bg-gradient-to-b from-[#1A1A3A]/95 to-[#121232]/95 rounded-xl border border-indigo-800/50 shadow-2xl max-w-md w-full overflow-hidden"
+        className="bg-gradient-to-b from-[#1A1A3A]/95 to-[#121232]/95 rounded-xl border border-indigo-800/50 shadow-2xl max-w-md w-full overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Success state */}
@@ -122,11 +168,12 @@ const CollectUserInfoModal = ({ domain, isOpen, onClose, onSubmit, onCompleted }
                 <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
                   Complete Your Scan
                 </h3>
+                {/* Update close button to use handleClose */}
                 <button 
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="w-8 h-8 rounded-full bg-gray-800/50 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700/80 transition-colors"
                 >
-                  <FaTimes />
+                  ✕
                 </button>
               </div>
             </div>

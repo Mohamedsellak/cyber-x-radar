@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaSearch, FaSort, FaEye, FaTrash, FaRadiation, FaExclamationTriangle, 
-         FaShieldAlt, FaRegCopy, FaCalendarAlt, FaCheck, FaTimes, FaUser, 
-         FaEnvelope, FaPhone, FaSyncAlt, FaExternalLinkAlt } from 'react-icons/fa';
+         FaShieldAlt, FaRegCopy,FaEnvelope, FaPhone, FaSyncAlt, FaExternalLinkAlt } from 'react-icons/fa';
 // Import the missing toggle icons
 import { IoToggle, IoToggleOutline } from 'react-icons/io5';
 import ViewScanModal from './components/ViewScanModal';
@@ -625,7 +624,7 @@ const ScansPage = () => {
                 <FaExclamationTriangle className="mx-auto h-12 w-12 text-gray-500 mb-4" />
                 <h3 className="text-xl font-medium text-gray-300 mb-2">No scan records found</h3>
                 <p className="text-gray-400 max-w-md mx-auto">
-                  We couldn't find any domain scan records matching your search criteria. Try adjusting your filters.
+                  We couldn&apos;t find any domain scan records matching your search criteria. Try adjusting your filters.
                 </p>
               </motion.div>
             )}
