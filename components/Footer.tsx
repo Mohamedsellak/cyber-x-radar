@@ -27,10 +27,10 @@ const Footer = () => {
     {
       title: "Company",
       links: [
-        { name: "About Us", href: "#" },
-        { name: "Partnership", href: "#" },
-        { name: "Contact", href: "#" },
-        { name: "FAQ", href: "#" },
+        { name: "About Us", href: "/about" },
+        { name: "Partnership", href: "/contact" },
+        { name: "API Documentation", href: "/api" },
+        { name: "Contact", href: "/contact" },
         { name: "Privacy Policy", href: "#" }
       ]
     }
@@ -165,9 +165,24 @@ const Footer = () => {
           className="py-6 px-8 rounded-xl bg-gradient-to-r from-[#1A1A3A]/40 to-[#121232]/40 border border-indigo-900/20 mb-12 grid grid-cols-1 md:grid-cols-3 gap-6 backdrop-blur-sm"
         >
           {[
-            { icon: <FaEnvelope className="text-blue-400" />, title: "Email Us", content: "contact@cyberxradar.com" },
-            { icon: <FaMapMarkerAlt className="text-blue-400" />, title: "Location", content: "Cyber Security Tower, Digital Ave." },
-            { icon: <FaPhone className="text-blue-400" />, title: "Call Us", content: "+1 (888) CYBER-XR" }
+            {
+              icon: <FaEnvelope className="text-blue-400" />,
+              title: "Email Us",
+              content: "contact@cyberxradar.com",
+              link: "mailto:contact@cyberxradar.com"
+            },
+            {
+              icon: <FaMapMarkerAlt className="text-blue-400" />,
+              title: "Location",
+              content: "Cyber Security Tower, Digital Ave.",
+              link: "#"
+            },
+            {
+              icon: <FaPhone className="text-blue-400" />,
+              title: "Call Us",
+              content: "+1 (888) CYBER-XR",
+              link: "tel:+18882923797"
+            }
           ].map((item, index) => (
             <div key={index} className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-[#1A1A3A] border border-indigo-900/30 flex items-center justify-center flex-shrink-0">
@@ -175,7 +190,7 @@ const Footer = () => {
               </div>
               <div>
                 <h5 className="text-sm text-gray-400">{item.title}</h5>
-                <p className="text-white font-medium">{item.content}</p>
+                <a href={item.link} className="text-white font-medium hover:text-blue-300 transition-colors">{item.content}</a>
               </div>
             </div>
           ))}

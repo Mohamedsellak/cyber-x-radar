@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/auth/auth.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/auth/auth.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

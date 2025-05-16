@@ -51,7 +51,7 @@ export default function TokenManagement() {
         return;
       }
       
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/tokens/get.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/tokens/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -107,7 +107,7 @@ export default function TokenManagement() {
         throw new Error('Authentication token not found');
       }
       
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/tokens/generate.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/tokens/generate.php', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -146,7 +146,7 @@ export default function TokenManagement() {
         throw new Error('Authentication token not found');
       }
       
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/tokens/update.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/tokens/update.php', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -188,7 +188,7 @@ export default function TokenManagement() {
         throw new Error('Authentication token not found');
       }
       
-      const response = await fetch(`http://localhost/cyber-x-radar/server/api/tokens/delete.php?id=${id}`, {
+      const response = await fetch(`https://scan.cyberxradar.com/server/api/tokens/delete.php?id=${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${authToken}`

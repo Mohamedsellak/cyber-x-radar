@@ -99,19 +99,22 @@ const Integrations = () => {
               icon: <FaCode />,
               title: "For Developers",
               description: "Our developer-friendly APIs provide a straightforward way to enhance your application&apos;s security with real-time threat detection capabilities.",
-              gradient: "from-blue-600 to-cyan-600"
+              gradient: "from-blue-600 to-cyan-600",
+              link: "/api"
             },
             {
               icon: <FaUserSecret />,
               title: "For Red Teams",
               description: "Unleash the potential of authentic dark web data in your simulations with actual compromised credentials and attack vectors.",
-              gradient: "from-indigo-600 to-purple-600"
+              gradient: "from-indigo-600 to-purple-600",
+              link: "/contact"
             },
             {
               icon: <FaRocket />,
               title: "For Enterprises",
               description: "Comprehensive integration options for large-scale deployments with custom configurations and dedicated support channels.",
-              gradient: "from-blue-600 to-indigo-700"
+              gradient: "from-blue-600 to-indigo-700",
+              link: "/contact"
             }
           ].map((item, index) => (
             <motion.div 
@@ -140,7 +143,7 @@ const Integrations = () => {
                   </p>
                   
                   <motion.a 
-                    href="#" 
+                    href={item.link} 
                     whileHover={{ x: 5 }}
                     className="inline-flex items-center gap-2 text-blue-400 font-medium hover:text-blue-300 transition-colors"
                   >
@@ -165,14 +168,15 @@ const Integrations = () => {
           viewport={{ once: true }}
           className="text-center mt-16"
         >
-          <motion.button 
+          <motion.a 
+            href="/api"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-medium rounded-lg transition shadow-lg hover:shadow-blue-900/30 flex items-center gap-2 mx-auto"
           >
             <FaRadiation size={14} />
             <span>Explore All Solutions</span>
-          </motion.button>
+          </motion.a>
         </motion.div>
       </div>
       

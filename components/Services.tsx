@@ -337,14 +337,15 @@ const Services = () => {
           viewport={{ once: true }}
           className="mt-16 text-center"
         >
-          <motion.div
+          <motion.a
+            href="#"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white rounded-lg font-medium shadow-lg hover:shadow-blue-900/20 transition-all duration-300"
           >
             <FaShieldAlt />
             <span>View All Security Services</span>
-          </motion.div>
+          </motion.a>
         </motion.div>
         
         {/* Enhanced feature highlight banner */}

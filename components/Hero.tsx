@@ -103,7 +103,7 @@ const Hero = () => {
     try {
       // Make API call
       const response = await fetch(
-        `https://localhost/cyber-x-radar/server/api/api-proxy.php?domain=${domain}`
+        `https://scan.cyberxradar.com/server/api/api-proxy.php?domain=${domain}`
       );
       
       if (!response.ok) {
@@ -267,14 +267,6 @@ const Hero = () => {
       color: 'blue'
     }
   ];
-
-  // Add specific function to handle modal blur
-  const handleModalBlur = () => {
-    if (isClient) {
-      return blurResults && userClosedInfoModal;
-    }
-    return false; // Default to false on server to prevent hydration mismatch
-  };
 
   return (
     <section className="py-20 md:py-24 bg-gradient-to-b from-[#0A0A1F] to-[#121221] text-white relative overflow-hidden">

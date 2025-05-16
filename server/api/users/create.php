@@ -14,8 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // // Authenticate request
-// $auth = new AuthMiddleware();
-// $auth->CheckAuth();
+$auth = new AuthMiddleware();
+$auth->CheckAuth();
 
 $db = new DbMethods();
 

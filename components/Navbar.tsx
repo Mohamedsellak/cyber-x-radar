@@ -113,7 +113,7 @@ const Navbar = () => {
               { href: "#free-tools", label: "Free Tools", icon: <FaTools className="text-blue-400 mr-1" size={12} /> },
               { href: "#partnership", label: "Partnership", icon: <FaLock className="text-blue-400 mr-1" size={12} /> },
               { href: "#about", label: "About", icon: <FaUserShield className="text-blue-400 mr-1" size={12} /> },
-              { href: "#faq", label: "FAQ", icon: <FaChartLine className="text-blue-400 mr-1" size={12} /> },
+              { href: "/api", label: "API Docs", icon: <FaChartLine className="text-blue-400 mr-1" size={12} /> },
               { href: "/contact", label: "Contact", icon: <FaEnvelope className="text-blue-400 mr-1" size={12} /> },
             ].map((link) => (
               <Link 
@@ -245,7 +245,7 @@ const Navbar = () => {
                   { href: "#free-tools", label: "Free Tools", icon: <FaTools size={14} /> },
                   { href: "#partnership", label: "Partnership", icon: <FaLock size={14} /> },
                   { href: "#about", label: "About", icon: <FaUserShield size={14} /> },
-                  { href: "#faq", label: "FAQ", icon: <FaChartLine size={14} /> },
+                  { href: "/api", label: "API Docs", icon: <FaChartLine size={14} /> },
                   { href: "/contact", label: "Contact", icon: <FaEnvelope size={14} /> },
                   { href: "/login", label: "Login", icon: <FaSignInAlt size={14} /> }
                 ].map((link) => (

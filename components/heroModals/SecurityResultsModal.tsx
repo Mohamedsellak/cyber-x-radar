@@ -61,7 +61,7 @@ const SecurityResultsModal: React.FC<SecurityResultsModalProps> = ({
   useEffect(() => {
     setIsMounted(true);
     console.log('SecurityResultsModal mounted, initial props:', { blurred, showOverlayMessage });
-  }, []);
+  }, [blurred, showOverlayMessage]); // Include missing dependencies
 
   // More visible debug logging when relevant props change
   useEffect(() => {
@@ -72,6 +72,9 @@ const SecurityResultsModal: React.FC<SecurityResultsModalProps> = ({
       shouldShowOverlay: blurred && showOverlayMessage && isMounted 
     });
   }, [blurred, showOverlayMessage, isMounted]);
+
+  // If modal is not open, don't render anything
+  if (!isOpen) return null;
 
   return (
     <motion.div 

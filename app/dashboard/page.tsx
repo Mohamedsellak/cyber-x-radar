@@ -37,12 +37,37 @@ interface DomainScan {
   date: string;
 }
 
+// Add interface for raw scan data from API
+interface RawScanData {
+  id: number;
+  domain_name?: string;
+  url?: string;
+  score?: number;
+  date?: string;
+  created_at?: string;
+  // Use a more specific index signature that doesn't trigger the linter
+  [key: string]: string | number | boolean | undefined;
+}
+
 interface Message {
   id: number;
   name: string;
   email: string;
   type: string;
   date: string;
+}
+
+// Add interface for raw message data from API
+interface RawMessageData {
+  id: number;
+  name?: string;
+  email?: string;
+  type?: string;
+  subject?: string;
+  date?: string;
+  created_at?: string;
+  // Use a more specific index signature that doesn't trigger the linter
+  [key: string]: string | number | boolean | undefined;
 }
 
 interface SecurityStatus {
@@ -119,7 +144,7 @@ export default function DashboardOverview() {
       }
       
       // Fetch users count
-      const usersResponse = await fetch('http://localhost/cyber-x-radar/server/api/users/get.php', {
+      const usersResponse = await fetch('https://scan.cyberxradar.com/server/api/users/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -129,7 +154,7 @@ export default function DashboardOverview() {
       const usersData = await usersResponse.json();
       
       // Fetch tokens count
-      const tokensResponse = await fetch('http://localhost/cyber-x-radar/server/api/tokens/get.php', {
+      const tokensResponse = await fetch('https://scan.cyberxradar.com/server/api/tokens/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -139,7 +164,7 @@ export default function DashboardOverview() {
       const tokensData = await tokensResponse.json();
       
       // Fetch scans count
-      const scansResponse = await fetch('http://localhost/cyber-x-radar/server/api/scans/get.php', {
+      const scansResponse = await fetch('https://scan.cyberxradar.com/server/api/scans/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -149,7 +174,7 @@ export default function DashboardOverview() {
       const scansData = await scansResponse.json();
       
       // Fetch contacts/messages count
-      const contactsResponse = await fetch('http://localhost/cyber-x-radar/server/api/contacts/get.php', {
+      const contactsResponse = await fetch('https://scan.cyberxradar.com/server/api/contacts/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -209,7 +234,7 @@ export default function DashboardOverview() {
         throw new Error('Authentication token not found');
       }
       
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/scans/get.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/scans/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -220,10 +245,13 @@ export default function DashboardOverview() {
       
       if (data.status === 'success') {
         // Take the 5 most recent scans
-        const sortedScans = (data.data || [])
-          .sort((a, b) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime())
+        const sortedScans = (data.data as RawScanData[] || [])
+          .sort((a: RawScanData, b: RawScanData) => 
+            new Date(b.date || b.created_at || '').getTime() - 
+            new Date(a.date || a.created_at || '').getTime()
+          )
           .slice(0, 5)
-          .map(scan => ({
+          .map((scan: RawScanData) => ({
             id: scan.id,
             domain: scan.domain_name || scan.url || 'Unknown',
             score: scan.score || Math.floor(Math.random() * 100), // Use random score if not available
@@ -265,7 +293,7 @@ export default function DashboardOverview() {
         throw new Error('Authentication token not found');
       }
       
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/contacts/get.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/contacts/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -276,10 +304,13 @@ export default function DashboardOverview() {
       
       if (data.status === 'success') {
         // Take the 3 most recent messages
-        const sortedMessages = (data.data || [])
-          .sort((a, b) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime())
+        const sortedMessages = (data.data as RawMessageData[] || [])
+          .sort((a: RawMessageData, b: RawMessageData) => 
+            new Date(b.date || b.created_at || '').getTime() - 
+            new Date(a.date || a.created_at || '').getTime()
+          )
           .slice(0, 3)
-          .map(message => ({
+          .map((message: RawMessageData) => ({
             id: message.id,
             name: message.name || 'Unknown',
             email: message.email || 'no-email@example.com',
@@ -396,7 +427,7 @@ export default function DashboardOverview() {
       }
       
       // Fetch actual scan data
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/scans/get.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/scans/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -407,10 +438,10 @@ export default function DashboardOverview() {
       
       if (data.status === 'success') {
         // Count actual statuses from real data
-        const scans = data.data || [];
+        const scans = data.data as RawScanData[] || [];
         let safe = 0, warning = 0, critical = 0;
         
-        scans.forEach(scan => {
+        scans.forEach((scan: RawScanData) => {
           const score = scan.score || 0;
           if (score > 70) safe++;
           else if (score > 40) warning++;
@@ -449,7 +480,8 @@ export default function DashboardOverview() {
   // Load data on initial render
   useEffect(() => {
     refreshDashboard();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array to run only once on mount
 
   // Render stats section with enhanced styles
   const renderStatsSection = () => {
@@ -910,6 +942,164 @@ export default function DashboardOverview() {
     );
   };
 
+  // Render activity data visualization
+  const renderActivityVisualization = () => {
+    if (isLoading.activity && !activityData) {
+      return (
+        <div className="p-4 flex justify-center items-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      );
+    }
+
+    if (errors.activity && !activityData) {
+      return (
+        <div className="p-4">
+          <div className="bg-red-900/20 p-4 rounded-lg border border-red-900/30 text-red-400">
+            <div className="flex items-center gap-2">
+              <FaExclamationTriangle />
+              <span>Error loading activity data: {errors.activity}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-4">
+        <div className="bg-[#121232]/80 rounded-xl border border-indigo-900/30 p-5">
+          <h3 className="text-lg font-semibold text-white mb-4">User Activity Trends</h3>
+          
+          <div className="relative h-48">
+            {activityData && (
+              <>
+                <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+                  {activityData.labels.map((label, index) => (
+                    <div key={index}>{label}</div>
+                  ))}
+                </div>
+                
+                <div className="relative h-40">
+                  {activityData.datasets.map((dataset, datasetIndex) => (
+                    <div key={datasetIndex} className="absolute bottom-0 left-0 right-0 flex justify-between h-full">
+                      {dataset.data.map((value, valueIndex) => {
+                        const height = `${(value / Math.max(...dataset.data)) * 100}%`;
+                        const colors = [
+                          'bg-blue-500/50 border-blue-500',
+                          'bg-indigo-500/50 border-indigo-500',
+                          'bg-purple-500/50 border-purple-500'
+                        ];
+                        return (
+                          <div key={valueIndex} className="relative flex-1 mx-1">
+                            <div 
+                              className={`absolute bottom-0 w-full rounded-t-sm border-t ${colors[datasetIndex]}`}
+                              style={{ height }}
+                            ></div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-3 flex items-center justify-center gap-5">
+                  {activityData.datasets.map((dataset, index) => (
+                    <div key={index} className="flex items-center gap-2 text-xs">
+                      <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-blue-500' : index === 1 ? 'bg-indigo-500' : 'bg-purple-500'}`}></div>
+                      <span className="text-gray-400">{dataset.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-xs text-gray-500">User Activity: {userActivityTrend.length > 0 ? 
+              userActivityTrend[userActivityTrend.length - 1] > userActivityTrend[0] ? 
+              'Increasing' : 'Decreasing' : 'Stable'}</span>
+            <span className="text-xs text-indigo-400">Last 7 days</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // Render scan distribution visualization
+  const renderScanDistribution = () => {
+    if (isLoading.distribution && !scanDistribution) {
+      return (
+        <div className="p-4 flex justify-center items-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      );
+    }
+
+    if (errors.distribution && !scanDistribution) {
+      return (
+        <div className="p-4">
+          <div className="bg-red-900/20 p-4 rounded-lg border border-red-900/30 text-red-400">
+            <div className="flex items-center gap-2">
+              <FaExclamationTriangle />
+              <span>Error loading scan distribution: {errors.distribution}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-4">
+        <div className="bg-[#121232]/80 rounded-xl border border-indigo-900/30 p-5">
+          <h3 className="text-lg font-semibold text-white mb-4">Scan Results Distribution</h3>
+          
+          {scanDistribution && (
+            <div className="flex flex-col items-center">
+              <div className="w-full flex justify-between max-w-xs">
+                {scanDistribution.labels.map((label, index) => {
+                  const totalScans = scanDistribution.values.reduce((sum, val) => sum + val, 0);
+                  const percentage = totalScans > 0 ? 
+                    Math.round((scanDistribution.values[index] / totalScans) * 100) : 0;
+                  
+                  const colors = [
+                    'text-green-400 bg-green-900/30 border-green-700/30',
+                    'text-yellow-400 bg-yellow-900/30 border-yellow-700/30',
+                    'text-red-400 bg-red-900/30 border-red-700/30'
+                  ];
+                  
+                  return (
+                    <div key={index} className="flex flex-col items-center">
+                      <div className={`h-10 w-10 rounded-full ${colors[index].split(' ')[1]} border ${colors[index].split(' ')[2]} flex items-center justify-center mb-2`}>
+                        <span className={`text-sm font-bold ${colors[index].split(' ')[0]}`}>{scanDistribution.values[index]}</span>
+                      </div>
+                      <div className="text-sm text-gray-400">{label}</div>
+                      <div className={`text-xs ${colors[index].split(' ')[0]}`}>{percentage}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="w-full h-3 bg-gray-800 rounded-full mt-5 flex overflow-hidden">
+                <div className="h-full bg-green-500" style={{ 
+                  width: scanDistribution.values[0] > 0 ? 
+                    `${(scanDistribution.values[0] / scanDistribution.values.reduce((sum, val) => sum + val, 1)) * 100}%` : '0%' 
+                }}></div>
+                <div className="h-full bg-yellow-500" style={{ 
+                  width: scanDistribution.values[1] > 0 ? 
+                    `${(scanDistribution.values[1] / scanDistribution.values.reduce((sum, val) => sum + val, 1)) * 100}%` : '0%' 
+                }}></div>
+                <div className="h-full bg-red-500" style={{ 
+                  width: scanDistribution.values[2] > 0 ? 
+                    `${(scanDistribution.values[2] / scanDistribution.values.reduce((sum, val) => sum + val, 1)) * 100}%` : '0%' 
+                }}></div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Render the dashboard
   return (
     <div className="p-4">
@@ -955,6 +1145,25 @@ export default function DashboardOverview() {
           <h3 className="text-xl font-semibold text-white">System Security Status</h3>
         </div>
         {renderSecurityStatus()}
+      </div>
+
+      {/* Visualizations section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Activity visualization */}
+        <div className="bg-gradient-to-b from-[#1A1A3A]/80 to-[#121232]/80 rounded-xl border border-indigo-900/50 shadow-lg">
+          <div className="p-4 border-b border-indigo-900/30">
+            <h3 className="text-xl font-semibold text-white">Activity Trends</h3>
+          </div>
+          {renderActivityVisualization()}
+        </div>
+
+        {/* Scan distribution */}
+        <div className="bg-gradient-to-b from-[#1A1A3A]/80 to-[#121232]/80 rounded-xl border border-indigo-900/50 shadow-lg">
+          <div className="p-4 border-b border-indigo-900/30">
+            <h3 className="text-xl font-semibold text-white">Scan Results Distribution</h3>
+          </div>
+          {renderScanDistribution()}
+        </div>
       </div>
 
       {/* Last updated info */}

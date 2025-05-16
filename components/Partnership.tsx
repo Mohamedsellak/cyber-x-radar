@@ -181,6 +181,7 @@ const Partnership = () => {
               <motion.button 
                 whileHover={{ x: 5 }}
                 className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                onClick={() => window.location.href = "/contact"}
               >
                 <span>Learn More</span>
                 <FaArrowRight size={12} />
@@ -227,14 +228,15 @@ const Partnership = () => {
               </div>
               
               <div className="md:col-span-1 flex flex-col md:items-end">
-                <motion.button 
+                <motion.a 
+                  href="/contact"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-blue-900/30 transition-all duration-300 mx-auto md:mx-0 flex items-center gap-2"
                 >
                   <FaRadiation size={14} />
                   <span>Learn About Partnership</span>
-                </motion.button>
+                </motion.a>
               </div>
             </div>
           </div>

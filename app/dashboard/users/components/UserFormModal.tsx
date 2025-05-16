@@ -12,11 +12,19 @@ interface User {
   updated_at?: string;
 }
 
+// Define a specific type for the form data
+interface UserFormData {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+}
+
 interface UserFormModalProps {
   user: User | null;
   mode: 'add' | 'edit';
   onClose: () => void;
-  onSave: (userData: any) => void;
+  onSave: (userData: UserFormData) => void;
 }
 
 export default function UserFormModal({ user, mode, onClose, onSave }: UserFormModalProps) {

@@ -94,7 +94,7 @@ export default function ContactsPage() {
         return;
       }
       
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/contacts/get.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/contacts/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -127,7 +127,7 @@ export default function ContactsPage() {
         return;
       }
       
-      const response = await fetch(`http://localhost/cyber-x-radar/server/api/contacts/delete.php?id=${id}`, {
+      const response = await fetch(`https://scan.cyberxradar.com/server/api/contacts/delete.php?id=${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

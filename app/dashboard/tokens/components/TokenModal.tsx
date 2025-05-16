@@ -39,6 +39,9 @@ export default function TokenModal({ isOpen, onClose, onSubmit }: TokenModalProp
     }
   };
 
+  // Return null if the modal is not open
+  if (!isOpen) return null;
+
   return (
     <motion.div
       initial={{ scale: 0.9, y: 20, opacity: 0 }}

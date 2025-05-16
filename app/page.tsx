@@ -4,14 +4,14 @@ import Hero from "../components/Hero";
 import Footer from "../components/Footer";
 import About from "../components/About";
 import AsSeenOn from "../components/AsSeenOn";
-// import Services from "../components/Services";
-// import Partnership from "../components/Partnership";
-// import FreeTools from "../components/FreeTools";
-// import GetStarted from "../components/GetStarted";
-// import WhyChooseUs from "../components/WhyChooseUs";
-// import FAQ from "../components/FAQ";
-// import Statistics from "../components/Statistics";
-// import Integrations from "../components/Integrations";
+import Services from "../components/Services";
+import Partnership from "../components/Partnership";
+import FreeTools from "../components/FreeTools";
+import GetStarted from "../components/GetStarted";
+import WhyChooseUs from "../components/WhyChooseUs";
+import FAQ from "../components/FAQ";
+import Statistics from "../components/Statistics";
+import Integrations from "../components/Integrations";
 
 export default function Home() {
   return (
@@ -20,14 +20,14 @@ export default function Home() {
       <Hero />
       <AsSeenOn />
       <About />
-      {/* <Services />
+      <Services />
       <Partnership />
       <Statistics />
       <FreeTools />
       <Integrations />
       <GetStarted />
       <WhyChooseUs />
-      <FAQ /> */}
+      <FAQ />
       <Footer />
     </div>
   );

@@ -59,7 +59,7 @@ const CollectUserInfoModal = ({ domain, isOpen, onClose, onCompleted }: CollectU
   // Submit user information directly to API
   const submitUserInfo = async (userData: UserInfoData) => {
     try {
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/scans/create.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/scans/create.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

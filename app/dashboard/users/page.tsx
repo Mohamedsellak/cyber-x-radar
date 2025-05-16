@@ -17,6 +17,14 @@ interface User {
   updated_at: string;
 }
 
+// Define interface for user form data
+interface UserFormData {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+}
+
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,7 +34,6 @@ export default function UserManagement() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,7 +57,7 @@ export default function UserManagement() {
         return;
       }
       
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/users/get.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/users/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -73,9 +80,7 @@ export default function UserManagement() {
   };
 
   // Create/Update user
-  const handleSaveUser = async (userData: any) => {
-    setIsSubmitting(true);
-    
+  const handleSaveUser = async (userData: UserFormData) => {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       
@@ -84,7 +89,7 @@ export default function UserManagement() {
       }
       
       const isEdit = formModalMode === 'edit';
-      const url = 'http://localhost/cyber-x-radar/server/api/users/' + (isEdit ? 'update.php' : 'create.php');
+      const url = 'https://scan.cyberxradar.com/server/api/users/' + (isEdit ? 'update.php' : 'create.php');
       
       const response = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
@@ -107,8 +112,6 @@ export default function UserManagement() {
     } catch (err) {
       console.error(`Error ${formModalMode === 'edit' ? 'updating' : 'creating'} user:`, err);
       alert('Failed to connect to the server');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -125,7 +128,7 @@ export default function UserManagement() {
         throw new Error('Authentication token not found');
       }
       
-      const response = await fetch(`http://localhost/cyber-x-radar/server/api/users/delete.php?id=${userToDelete.id}`, {
+      const response = await fetch(`https://scan.cyberxradar.com/server/api/users/delete.php?id=${userToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

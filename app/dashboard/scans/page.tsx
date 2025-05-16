@@ -28,7 +28,7 @@ const ScansPage = () => {
   const [sortField, setSortField] = useState<keyof Scan>('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [isClient, setIsClient] = useState(false);
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  // Remove unused hoverIndex state variable
   
   // State variables for functionality
   const [selectedScan, setSelectedScan] = useState<Scan | null>(null);
@@ -37,7 +37,7 @@ const ScansPage = () => {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
-  const [showExportOptions, setShowExportOptions] = useState(false);
+  // Remove unused showExportOptions state variable
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +56,7 @@ const ScansPage = () => {
     // Add click outside listener for dropdown
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowExportOptions(false);
+        // No need to set showExportOptions since it's been removed
       }
     };
     
@@ -115,7 +115,7 @@ const ScansPage = () => {
         return;
       }
       
-      const response = await fetch('http://localhost/cyber-x-radar/server/api/scans/get.php', {
+      const response = await fetch('https://scan.cyberxradar.com/server/api/scans/get.php', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -198,7 +198,7 @@ const ScansPage = () => {
         return;
       }
       
-      const response = await fetch(`http://localhost/cyber-x-radar/server/api/scans/delete.php?id=${scanId}`, {
+      const response = await fetch(`https://scan.cyberxradar.com/server/api/scans/delete.php?id=${scanId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -516,13 +516,12 @@ const ScansPage = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-indigo-900/30">
-                        {filteredScans.map((scan, index) => (
+                        {filteredScans.map((scan) => (
                           <motion.tr 
                             key={scan.id}
                             variants={itemVariants}
                             className="hover:bg-indigo-900/10 transition-colors"
-                            onMouseEnter={() => setHoverIndex(index)}
-                            onMouseLeave={() => setHoverIndex(null)}
+                            // Remove onMouseEnter and onMouseLeave events since hoverIndex is removed
                             layoutId={`scan-row-${scan.id}`}
                           >
                             <td className="px-6 py-4 whitespace-nowrap">

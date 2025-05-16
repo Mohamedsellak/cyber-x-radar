@@ -59,8 +59,8 @@ export default function UpdateTokenModal({ token, isOpen, onClose, onUpdate }: U
   };
 
   // Only render the full component on the client to avoid hydration issues
-  if (!isClient) {
-    return null; // Return null during server-side rendering
+  if (!isClient || !isOpen) {
+    return null; // Return null during server-side rendering or when modal is closed
   }
 
   return (

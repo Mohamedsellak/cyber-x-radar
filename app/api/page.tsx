@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaKey, FaCode, FaCheck, FaCopy, FaShieldAlt, FaExclamationTriangle, FaSkull } from 'react-icons/fa';
+import { FaKey, FaCode, FaCheck, FaCopy, FaShieldAlt, FaExclamationTriangle, FaSkull, FaHome, FaChevronLeft } from 'react-icons/fa';
+import Link from 'next/link';
 
 export default function ApiDocumentation() {
   const [activeSample, setActiveSample] = useState('curl');
   const [copied, setCopied] = useState<{[key: string]: boolean}>({});
+  const [activeSection, setActiveSection] = useState('getting-started');
   
-  const apiUrl = 'http://localhost/cyber-x-radar/server/api/getDomainStatistics.php';
+  const apiUrl = 'https://scan.cyberxradar.com/server/api/getDomainStatistics.php';
   
   // Updated sample response to match the actual API response for Dark Web monitoring
   const sampleResponses = {
@@ -108,6 +110,42 @@ public class ApiExample {
     }, 2000);
   };
 
+  // Track active section based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = [
+        'getting-started',
+        'authentication',
+        'endpoints',
+        'response',
+        'examples',
+        'rate-limits',
+        'contact'
+      ];
+      
+      const sectionElements = sections.map(id => 
+        document.getElementById(id)
+      ).filter(Boolean);
+      
+      // Find the section that is currently in view
+      for (let i = sectionElements.length - 1; i >= 0; i--) {
+        const section = sectionElements[i];
+        if (!section) continue;
+        
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= 100) {
+          setActiveSection(section.id);
+          break;
+        }
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initialize on mount
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const endpoints = [
     {
       name: "Dark Web Monitoring",
@@ -121,10 +159,30 @@ public class ApiExample {
     }
   ];
 
+  // Navigation links for sidebar
+  const navLinks = [
+    { id: 'getting-started', label: 'Getting Started', icon: <FaCode className="w-4 h-4" /> },
+    { id: 'authentication', label: 'Authentication', icon: <FaKey className="w-4 h-4" /> },
+    { id: 'endpoints', label: 'API Endpoints', icon: <FaSkull className="w-4 h-4" /> },
+    { id: 'response', label: 'Response Format', icon: <FaShieldAlt className="w-4 h-4" /> },
+    { id: 'examples', label: 'Code Examples', icon: <FaCode className="w-4 h-4" /> },
+    { id: 'rate-limits', label: 'Rate Limits', icon: <FaExclamationTriangle className="w-4 h-4" /> },
+    { id: 'contact', label: 'Contact Support', icon: <FaCheck className="w-4 h-4" /> }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0A0A1F] to-[#121221] text-gray-100 pb-16">
+      {/* Back to Home Button - Fixed Position */}
+      <div className="fixed top-6 left-6 z-50">
+        <Link href="/" className="flex items-center gap-2 px-4 py-2 bg-blue-900/80 hover:bg-blue-800 text-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-blue-900/40 border border-blue-700/50 backdrop-blur-sm group">
+          <FaChevronLeft className="transition-transform group-hover:-translate-x-1" />
+          <FaHome className="text-blue-300" />
+          <span>Back to Home</span>
+        </Link>
+      </div>
+      
       {/* Hero Section - Updated for Dark Web focus */}
-      <div className="relative bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border-b border-indigo-900/50">
+      <div className="relative bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border-b border-indigo-900/50 pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="relative z-10">
             <motion.div
@@ -141,14 +199,14 @@ public class ApiExample {
               <div className="mt-8 flex flex-wrap gap-4">
                 <a 
                   href="#getting-started" 
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-500 transition-colors flex items-center gap-2"
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-500 transition-colors flex items-center gap-2 transform hover:translate-y-[-2px] shadow-lg hover:shadow-blue-600/30"
                 >
                   <FaCode />
                   Get Started
                 </a>
                 <a 
                   href="#contact" 
-                  className="bg-indigo-900/50 text-white px-6 py-3 rounded-lg font-medium border border-indigo-700/50 hover:bg-indigo-800/50 transition-colors flex items-center gap-2"
+                  className="bg-indigo-900/50 text-white px-6 py-3 rounded-lg font-medium border border-indigo-700/50 hover:bg-indigo-800/50 transition-colors flex items-center gap-2 transform hover:translate-y-[-2px] shadow-lg hover:shadow-indigo-600/20"
                 >
                   <FaKey />
                   Request API Access
@@ -158,6 +216,20 @@ public class ApiExample {
           </div>
         </div>
 
+        {/* Enhanced background with animated glow */}
+        <motion.div
+          animate={{ 
+            opacity: [0.2, 0.3, 0.2],
+            scale: [1, 1.05, 1]
+          }}
+          transition={{ 
+            duration: 8, 
+            repeat: Infinity, 
+            repeatType: "reverse" 
+          }}
+          className="absolute top-1/2 right-0 transform -translate-y-1/2 w-1/3 h-2/3 bg-blue-600/20 rounded-full filter blur-[100px]"
+        />
+
         {/* Background grid pattern */}
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] bg-center opacity-[0.1]"></div>
       </div>
@@ -165,43 +237,60 @@ public class ApiExample {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar Navigation */}
+          {/* Enhanced Sidebar Navigation */}
           <div className="lg:col-span-1">
-            <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-4 sticky top-8">
-              <nav className="space-y-1">
-                <a href="#getting-started" className="block px-3 py-2 rounded-lg bg-blue-900/30 text-blue-400 font-medium border border-blue-800/50">
-                  Getting Started
-                </a>
-                <a href="#authentication" className="block px-3 py-2 rounded-lg text-gray-300 hover:bg-indigo-900/30 hover:text-blue-400 transition-colors">
-                  Authentication
-                </a>
-                <a href="#endpoints" className="block px-3 py-2 rounded-lg text-gray-300 hover:bg-indigo-900/30 hover:text-blue-400 transition-colors">
-                  API Endpoints
-                </a>
-                <a href="#response" className="block px-3 py-2 rounded-lg text-gray-300 hover:bg-indigo-900/30 hover:text-blue-400 transition-colors">
-                  Response Format
-                </a>
-                <a href="#examples" className="block px-3 py-2 rounded-lg text-gray-300 hover:bg-indigo-900/30 hover:text-blue-400 transition-colors">
-                  Code Examples
-                </a>
-                <a href="#rate-limits" className="block px-3 py-2 rounded-lg text-gray-300 hover:bg-indigo-900/30 hover:text-blue-400 transition-colors">
-                  Rate Limits
-                </a>
-                <a href="#contact" className="block px-3 py-2 rounded-lg text-gray-300 hover:bg-indigo-900/30 hover:text-blue-400 transition-colors">
-                  Contact Support
-                </a>
-              </nav>
+            <div className="lg:sticky lg:top-8 space-y-6">
+              {/* Enhanced navigation card with glass effect */}
+              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-4 backdrop-blur-sm">
+                <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300 mb-4">
+                  Documentation
+                </h3>
+                <nav className="space-y-1">
+                  {navLinks.map(link => (
+                    <a 
+                      key={link.id}
+                      href={`#${link.id}`} 
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${
+                        activeSection === link.id 
+                          ? 'bg-blue-900/40 text-blue-300 font-medium border border-blue-800/50 shadow-sm' 
+                          : 'text-gray-300 hover:bg-indigo-900/30 hover:text-blue-400 transition-all duration-200'
+                      }`}
+                    >
+                      {link.icon}
+                      <span>{link.label}</span>
+                    </a>
+                  ))}
+                </nav>
+              </div>
+              
+              {/* Resource links card */}
+              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-4 backdrop-blur-sm">
+                <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300 mb-4">
+                  Resources
+                </h3>
+                <div className="space-y-2">
+                  <a href="/contact" className="flex items-center gap-2 text-gray-300 hover:text-blue-300 transition-colors py-2">
+                    <FaShieldAlt className="text-blue-500" />
+                    <span>Request Enterprise Plan</span>
+                  </a>
+                  <a href="/contact" className="flex items-center gap-2 text-gray-300 hover:text-blue-300 transition-colors py-2">
+                    <FaExclamationTriangle className="text-amber-400" />
+                    <span>Report API Issues</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-12">
+          {/* Main Content - with enhanced styling */}
+          <div className="lg:col-span-3 space-y-16">
             {/* Getting Started - Updated for Dark Web focus */}
             <section id="getting-started" className="scroll-mt-16">
-              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6 flex items-center gap-3">
+                <FaCode className="text-blue-400" />
                 Getting Started
               </h2>
-              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6">
+              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6 backdrop-blur-sm hover:shadow-blue-900/10 transition-all duration-300">
                 <p className="text-gray-300 mb-4">
                   The Cyber X Radar API provides programmatic access to our powerful dark web monitoring and domain security scanning engine. 
                   With our API, you can:
@@ -228,10 +317,11 @@ public class ApiExample {
 
             {/* Authentication */}
             <section id="authentication" className="scroll-mt-16">
-              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6 flex items-center gap-3">
+                <FaKey className="text-blue-400" />
                 Authentication
               </h2>
-              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6">
+              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6 backdrop-blur-sm hover:shadow-blue-900/10 transition-all duration-300">
                 <p className="text-gray-300 mb-4">
                   All API requests require authentication using an API token.
                   Include your token as a query parameter in every request.
@@ -252,10 +342,11 @@ public class ApiExample {
 
             {/* API Endpoints - Updated for Dark Web focus */}
             <section id="endpoints" className="scroll-mt-16">
-              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6 flex items-center gap-3">
+                <FaSkull className="text-red-400" />
                 API Endpoints
               </h2>
-              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg overflow-hidden">
+              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg overflow-hidden backdrop-blur-sm hover:shadow-blue-900/10 transition-all duration-300">
                 {endpoints.map((endpoint, index) => (
                   <div 
                     key={index} 
@@ -330,10 +421,11 @@ public class ApiExample {
 
             {/* Response Format - Updated with the actual Dark Web monitoring response */}
             <section id="response" className="scroll-mt-16">
-              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6 flex items-center gap-3">
+                <FaShieldAlt className="text-blue-400" />
                 Response Format
               </h2>
-              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6">
+              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6 backdrop-blur-sm hover:shadow-blue-900/10 transition-all duration-300">
                 <p className="text-gray-300 mb-6">
                   The API returns responses in JSON format. Each response includes a <code className="text-amber-400">status</code> field that indicates whether the request was successful.
                 </p>
@@ -440,10 +532,11 @@ public class ApiExample {
 
             {/* Code Examples - Updated with more language options */}
             <section id="examples" className="scroll-mt-16">
-              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6 flex items-center gap-3">
+                <FaCode className="text-blue-400" />
                 Code Examples
               </h2>
-              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6">
+              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6 backdrop-blur-sm hover:shadow-blue-900/10 transition-all duration-300">
                 <div className="mb-6">
                   <div className="flex flex-wrap border-b border-indigo-900/30">
                     {Object.keys(requestSamples).map((key) => (
@@ -481,10 +574,11 @@ public class ApiExample {
 
             {/* Rate Limits */}
             <section id="rate-limits" className="scroll-mt-16">
-              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6 flex items-center gap-3">
+                <FaExclamationTriangle className="text-amber-400" />
                 Rate Limits
               </h2>
-              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6">
+              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6 backdrop-blur-sm hover:shadow-blue-900/10 transition-all duration-300">
                 <p className="text-gray-300 mb-4">
                   To ensure service stability, API requests are subject to rate limiting.
                 </p>
@@ -545,10 +639,11 @@ public class ApiExample {
 
             {/* Contact Support */}
             <section id="contact" className="scroll-mt-16">
-              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-6 flex items-center gap-3">
+                <FaCheck className="text-green-400" />
                 Contact Support
               </h2>
-              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6">
+              <div className="bg-[#1A1A3A]/80 rounded-xl border border-indigo-900/50 shadow-lg p-6 backdrop-blur-sm hover:shadow-blue-900/10 transition-all duration-300">
                 <p className="text-gray-300 mb-6">
                   Need help with the API or want to request access? Our team is here to assist you.
                 </p>
@@ -578,6 +673,20 @@ public class ApiExample {
             </section>
           </div>
         </div>
+      </div>
+      
+      {/* Footer with back to top button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+        <a 
+          href="#" 
+          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-900/40 hover:bg-indigo-800/50 rounded-lg text-gray-300 hover:text-white transition-all duration-300 border border-indigo-800/30"
+          onClick={(e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        >
+          Back to Top
+        </a>
       </div>
     </div>
   );
