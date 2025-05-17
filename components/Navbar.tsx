@@ -140,9 +140,9 @@ const Navbar = () => {
             >
               <Link 
                 href="/login"
-                className="flex items-center justify-center gap-1.5 text-sm font-medium border border-indigo-500/80 bg-[#1A1A3A]/60 hover:bg-indigo-600/30 text-blue-400 hover:text-blue-200 py-1.5 px-3.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-blue-500/20"
+                className="flex items-center justify-center gap-1.5 text-sm font-medium border border-indigo-500/80 bg-[#1A1A3A]/60 hover:bg-indigo-600/30 text-blue-400 hover:text-blue-200 py-1.5 px-3.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-blue-500/20 relative"
               >
-                <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600/10 to-indigo-600/20 opacity-0 hover:opacity-100 transition-opacity"></span>
+                <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600/10 to-indigo-600/20 opacity-0 hover:opacity-100 transition-opacity pointer-events-none"></span>
                 <FaSignInAlt size={14} className="transform transition-transform hover:rotate-12" />
               </Link>
             </motion.div>

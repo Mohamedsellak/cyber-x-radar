@@ -269,14 +269,14 @@ public class ApiExample {
                   Resources
                 </h3>
                 <div className="space-y-2">
-                  <a href="/contact" className="flex items-center gap-2 text-gray-300 hover:text-blue-300 transition-colors py-2">
+                  <Link href="/contact" className="flex items-center gap-2 text-gray-300 hover:text-blue-300 transition-colors py-2">
                     <FaShieldAlt className="text-blue-500" />
                     <span>Request Enterprise Plan</span>
-                  </a>
-                  <a href="/contact" className="flex items-center gap-2 text-gray-300 hover:text-blue-300 transition-colors py-2">
+                  </Link>
+                  <Link href="/contact" className="flex items-center gap-2 text-gray-300 hover:text-blue-300 transition-colors py-2">
                     <FaExclamationTriangle className="text-amber-400" />
                     <span>Report API Issues</span>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
